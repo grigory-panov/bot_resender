@@ -15,20 +15,21 @@ next parts is not implemented yet
 
 
 # config sample
-app.hash=xxxxxxxxxxxxxxxxxx
-app.id=xxxxxx
-bot.id=xxxxxxx
-bot.key=XXXXXXXXXXXXXXX
 
-tdlib.log_level=5
-tdlib.log_file=logs/tdlib.log
-jdbc.url=jdbc:sqlite:db/db.sqlite
-jdbc.username=sa
-jdbc.password=
-jdbc.driver_class=org.sqlite.JDBC
-bot.owner=xxxxxxxxxxx
-proxy.enabled=true
-proxy.host=127.0.0.1
-proxy.port=443
-proxy.user=xxx
-proxy.password=xxxxx
+    app.hash=xxxxxxxxxxxxxxxxxx
+    app.id=xxxxxx
+    bot.id=xxxxxxx
+    bot.key=XXXXXXXXXXXXXXX
+
+    tdlib.log_level=5
+    tdlib.log_file=logs/tdlib.log
+    jdbc.url=jdbc:sqlite:db/db.sqlite
+    jdbc.username=sa
+    jdbc.password=
+    jdbc.driver_class=org.sqlite.JDBC
+    bot.owner=xxxxxxxxxxx
+    proxy.enabled=true
+    proxy.host=127.0.0.1
+    proxy.port=443
+    proxy.user=xxx
+    proxy.password=xxxxx
