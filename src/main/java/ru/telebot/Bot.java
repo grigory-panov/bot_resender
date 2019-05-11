@@ -166,11 +166,20 @@ public class Bot implements Runnable, AutoCloseable {
             List<Chat> chats = DbHelper.getChatsToForward(dataSource, phone, message.message.chatId);
             for (Chat chat : chats) {
                 if (!DbHelper.messageWasForwarderToChannel(dataSource, message.message.id, chat.getChatIdTo())) {
+                    logger.debug("message type: " + message.message.content.getClass().getSimpleName());
                     TdApi.InputMessageContent inputMessageContent ;
-                    if(message.message.content instanceof TdApi.MessageText){
-                        String text = chat.getName().substring(0, chat.getName().indexOf("->")) + "\n" + ((TdApi.MessageText)message.message.content).text.text;
-                        TdApi.FormattedText formattedText = new TdApi.FormattedText(text, null);
-                        inputMessageContent = new TdApi.InputMessageText(formattedText, true, true);
+                    if(message.message.content instanceof TdApi.MessageText) {
+                        TdApi.MessageText messageText = (TdApi.MessageText) message.message.content;
+                        String text = chat.getName().substring(0, chat.getName().indexOf("->")) + "\n";
+                        TdApi.TextEntity[] entity = shiftEntity(messageText.text.entities, text.length());
+                        TdApi.FormattedText formattedText = new TdApi.FormattedText(text + messageText.text.text, entity);
+                        inputMessageContent = new TdApi.InputMessageText(formattedText, false, true);
+                    } else if(message.message.content instanceof TdApi.MessagePhoto){
+                        TdApi.MessagePhoto messagePhoto = (TdApi.MessagePhoto) message.message.content;
+                        String text = chat.getName().substring(0, chat.getName().indexOf("->")) + "\n";
+                        TdApi.TextEntity[] entity = shiftEntity(messagePhoto.caption.entities, text.length());
+                        TdApi.FormattedText formattedText = new TdApi.FormattedText(text + messagePhoto.caption.text, entity);
+                        inputMessageContent = new TdApi.InputMessagePhoto(new TdApi.InputFileRemote(messagePhoto.photo.sizes[0].photo.remote.id), null, null, 0, 0, formattedText, 0);
                     }else{
                         inputMessageContent = new TdApi.InputMessageForwarded(message.message.chatId, message.message.id, false);
                     }
@@ -189,6 +198,13 @@ public class Bot implements Runnable, AutoCloseable {
         } catch (SQLException ex) {
             logger.error(ex.getMessage(), ex);
         }
+    }
+
+    private static TdApi.TextEntity[] shiftEntity(TdApi.TextEntity[] entities, int length) {
+        for (int i = 0; i < entities.length; i++){
+            entities[i].offset += length;
+        }
+        return entities;
     }
 
     public static void onAuthorizationStateUpdated(TdApi.AuthorizationState authorizationState, String phone) {
