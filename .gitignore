@@ -1,5 +1,6 @@
 .idea/
 bot.config
+libtdjni.so
 *.iml
 logs/
 tdlib/
