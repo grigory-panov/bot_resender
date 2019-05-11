@@ -1,5 +1,5 @@
 //
-// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2018
+// Copyright Aliaksei Levin (levlam@telegram.org), Arseny Smirnov (arseny30@gmail.com) 2014-2019
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -7,12 +7,11 @@
 package org.drinkless.tdlib.example;
 
 import org.drinkless.tdlib.Client;
-import org.drinkless.tdlib.Log;
 import org.drinkless.tdlib.TdApi;
 
+import java.io.BufferedReader;
 import java.io.IOError;
 import java.io.IOException;
-import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.NavigableSet;
 import java.util.TreeSet;
@@ -285,8 +284,8 @@ public final class Example {
 
     public static void main(String[] args) throws InterruptedException {
         // disable TDLib log
-        Log.setVerbosityLevel(0);
-        if (!Log.setFilePath("tdlib.log")) {
+        Client.execute(new TdApi.SetLogVerbosityLevel(0));
+        if (Client.execute(new TdApi.SetLogStream(new TdApi.LogStreamFile("tdlib.log", 1 << 27))) instanceof TdApi.Error) {
             throw new IOError(new IOException("Write access to the current directory is required"));
         }
 

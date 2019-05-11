@@ -669,19 +669,21 @@ public class TdApi {
         public String config;
         public byte[] encryptionKey;
         public String[] emojis;
+        public boolean allowP2p;
 
         public CallStateReady() {
         }
 
-        public CallStateReady(CallProtocol protocol, CallConnection[] connections, String config, byte[] encryptionKey, String[] emojis) {
+        public CallStateReady(CallProtocol protocol, CallConnection[] connections, String config, byte[] encryptionKey, String[] emojis, boolean allowP2p) {
             this.protocol = protocol;
             this.connections = connections;
             this.config = config;
             this.encryptionKey = encryptionKey;
             this.emojis = emojis;
+            this.allowP2p = allowP2p;
         }
 
-        public static final int CONSTRUCTOR = 1518705438;
+        public static final int CONSTRUCTOR = 1848397705;
 
         @Override
         public int getConstructor() {
@@ -813,6 +815,8 @@ public class TdApi {
         public boolean isPinned;
         public boolean isMarkedAsUnread;
         public boolean isSponsored;
+        public boolean canBeDeletedOnlyForSelf;
+        public boolean canBeDeletedForAllUsers;
         public boolean canBeReported;
         public boolean defaultDisableNotification;
         public int unreadCount;
@@ -820,6 +824,7 @@ public class TdApi {
         public long lastReadOutboxMessageId;
         public int unreadMentionCount;
         public ChatNotificationSettings notificationSettings;
+        public long pinnedMessageId;
         public long replyMarkupMessageId;
         public DraftMessage draftMessage;
         public String clientData;
@@ -827,7 +832,7 @@ public class TdApi {
         public Chat() {
         }
 
-        public Chat(long id, ChatType type, String title, ChatPhoto photo, Message lastMessage, long order, boolean isPinned, boolean isMarkedAsUnread, boolean isSponsored, boolean canBeReported, boolean defaultDisableNotification, int unreadCount, long lastReadInboxMessageId, long lastReadOutboxMessageId, int unreadMentionCount, ChatNotificationSettings notificationSettings, long replyMarkupMessageId, DraftMessage draftMessage, String clientData) {
+        public Chat(long id, ChatType type, String title, ChatPhoto photo, Message lastMessage, long order, boolean isPinned, boolean isMarkedAsUnread, boolean isSponsored, boolean canBeDeletedOnlyForSelf, boolean canBeDeletedForAllUsers, boolean canBeReported, boolean defaultDisableNotification, int unreadCount, long lastReadInboxMessageId, long lastReadOutboxMessageId, int unreadMentionCount, ChatNotificationSettings notificationSettings, long pinnedMessageId, long replyMarkupMessageId, DraftMessage draftMessage, String clientData) {
             this.id = id;
             this.type = type;
             this.title = title;
@@ -837,6 +842,8 @@ public class TdApi {
             this.isPinned = isPinned;
             this.isMarkedAsUnread = isMarkedAsUnread;
             this.isSponsored = isSponsored;
+            this.canBeDeletedOnlyForSelf = canBeDeletedOnlyForSelf;
+            this.canBeDeletedForAllUsers = canBeDeletedForAllUsers;
             this.canBeReported = canBeReported;
             this.defaultDisableNotification = defaultDisableNotification;
             this.unreadCount = unreadCount;
@@ -844,12 +851,13 @@ public class TdApi {
             this.lastReadOutboxMessageId = lastReadOutboxMessageId;
             this.unreadMentionCount = unreadMentionCount;
             this.notificationSettings = notificationSettings;
+            this.pinnedMessageId = pinnedMessageId;
             this.replyMarkupMessageId = replyMarkupMessageId;
             this.draftMessage = draftMessage;
             this.clientData = clientData;
         }
 
-        public static final int CONSTRUCTOR = -4728182;
+        public static final int CONSTRUCTOR = 697768263;
 
         @Override
         public int getConstructor() {
@@ -1744,20 +1752,28 @@ public class TdApi {
         public String sound;
         public boolean useDefaultShowPreview;
         public boolean showPreview;
+        public boolean useDefaultDisablePinnedMessageNotifications;
+        public boolean disablePinnedMessageNotifications;
+        public boolean useDefaultDisableMentionNotifications;
+        public boolean disableMentionNotifications;
 
         public ChatNotificationSettings() {
         }
 
-        public ChatNotificationSettings(boolean useDefaultMuteFor, int muteFor, boolean useDefaultSound, String sound, boolean useDefaultShowPreview, boolean showPreview) {
+        public ChatNotificationSettings(boolean useDefaultMuteFor, int muteFor, boolean useDefaultSound, String sound, boolean useDefaultShowPreview, boolean showPreview, boolean useDefaultDisablePinnedMessageNotifications, boolean disablePinnedMessageNotifications, boolean useDefaultDisableMentionNotifications, boolean disableMentionNotifications) {
             this.useDefaultMuteFor = useDefaultMuteFor;
             this.muteFor = muteFor;
             this.useDefaultSound = useDefaultSound;
             this.sound = sound;
             this.useDefaultShowPreview = useDefaultShowPreview;
             this.showPreview = showPreview;
+            this.useDefaultDisablePinnedMessageNotifications = useDefaultDisablePinnedMessageNotifications;
+            this.disablePinnedMessageNotifications = disablePinnedMessageNotifications;
+            this.useDefaultDisableMentionNotifications = useDefaultDisableMentionNotifications;
+            this.disableMentionNotifications = disableMentionNotifications;
         }
 
-        public static final int CONSTRUCTOR = 1949924445;
+        public static final int CONSTRUCTOR = 1503183218;
 
         @Override
         public int getConstructor() {
@@ -1820,6 +1836,19 @@ public class TdApi {
         }
 
         public static final int CONSTRUCTOR = 722614385;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class ChatReportReasonChildAbuse extends ChatReportReason {
+
+        public ChatReportReasonChildAbuse() {
+        }
+
+        public static final int CONSTRUCTOR = -1070686531;
 
         @Override
         public int getConstructor() {
@@ -2223,6 +2252,24 @@ public class TdApi {
         }
     }
 
+    public static class DatabaseStatistics extends Object {
+        public String statistics;
+
+        public DatabaseStatistics() {
+        }
+
+        public DatabaseStatistics(String statistics) {
+            this.statistics = statistics;
+        }
+
+        public static final int CONSTRUCTOR = -1123912880;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
     public static class Date extends Object {
         public int day;
         public int month;
@@ -2288,17 +2335,19 @@ public class TdApi {
     public abstract static class DeviceToken extends Object {
     }
 
-    public static class DeviceTokenGoogleCloudMessaging extends DeviceToken {
+    public static class DeviceTokenFirebaseCloudMessaging extends DeviceToken {
         public String token;
+        public boolean encrypt;
 
-        public DeviceTokenGoogleCloudMessaging() {
+        public DeviceTokenFirebaseCloudMessaging() {
         }
 
-        public DeviceTokenGoogleCloudMessaging(String token) {
+        public DeviceTokenFirebaseCloudMessaging(String token, boolean encrypt) {
             this.token = token;
+            this.encrypt = encrypt;
         }
 
-        public static final int CONSTRUCTOR = 1092220225;
+        public static final int CONSTRUCTOR = -797881849;
 
         @Override
         public int getConstructor() {
@@ -2329,16 +2378,18 @@ public class TdApi {
     public static class DeviceTokenApplePushVoIP extends DeviceToken {
         public String deviceToken;
         public boolean isAppSandbox;
+        public boolean encrypt;
 
         public DeviceTokenApplePushVoIP() {
         }
 
-        public DeviceTokenApplePushVoIP(String deviceToken, boolean isAppSandbox) {
+        public DeviceTokenApplePushVoIP(String deviceToken, boolean isAppSandbox, boolean encrypt) {
             this.deviceToken = deviceToken;
             this.isAppSandbox = isAppSandbox;
+            this.encrypt = encrypt;
         }
 
-        public static final int CONSTRUCTOR = -327676505;
+        public static final int CONSTRUCTOR = 804275689;
 
         @Override
         public int getConstructor() {
@@ -2653,6 +2704,24 @@ public class TdApi {
         }
 
         public static final int CONSTRUCTOR = 766337656;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class FilePart extends Object {
+        public byte[] data;
+
+        public FilePart() {
+        }
+
+        public FilePart(byte[] data) {
+            this.data = data;
+        }
+
+        public static final int CONSTRUCTOR = 911821878;
 
         @Override
         public int getConstructor() {
@@ -2992,6 +3061,24 @@ public class TdApi {
         }
 
         public static final int CONSTRUCTOR = 676798885;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class HttpUrl extends Object {
+        public String url;
+
+        public HttpUrl() {
+        }
+
+        public HttpUrl(String url) {
+            this.url = url;
+        }
+
+        public static final int CONSTRUCTOR = -2018019930;
 
         @Override
         public int getConstructor() {
@@ -4409,6 +4496,26 @@ public class TdApi {
         }
     }
 
+    public static class InputMessagePoll extends InputMessageContent {
+        public String question;
+        public String[] options;
+
+        public InputMessagePoll() {
+        }
+
+        public InputMessagePoll(String question, String[] options) {
+            this.question = question;
+            this.options = options;
+        }
+
+        public static final int CONSTRUCTOR = -1791140518;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
     public static class InputMessageForwarded extends InputMessageContent {
         public long fromChatId;
         public long messageId;
@@ -4957,6 +5064,132 @@ public class TdApi {
         }
     }
 
+    public static class JsonObjectMember extends Object {
+        public String key;
+        public JsonValue value;
+
+        public JsonObjectMember() {
+        }
+
+        public JsonObjectMember(String key, JsonValue value) {
+            this.key = key;
+            this.value = value;
+        }
+
+        public static final int CONSTRUCTOR = -1803309418;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public abstract static class JsonValue extends Object {
+    }
+
+    public static class JsonValueNull extends JsonValue {
+
+        public JsonValueNull() {
+        }
+
+        public static final int CONSTRUCTOR = -92872499;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class JsonValueBoolean extends JsonValue {
+        public boolean value;
+
+        public JsonValueBoolean() {
+        }
+
+        public JsonValueBoolean(boolean value) {
+            this.value = value;
+        }
+
+        public static final int CONSTRUCTOR = -2142186576;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class JsonValueNumber extends JsonValue {
+        public double value;
+
+        public JsonValueNumber() {
+        }
+
+        public JsonValueNumber(double value) {
+            this.value = value;
+        }
+
+        public static final int CONSTRUCTOR = -1010822033;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class JsonValueString extends JsonValue {
+        public String value;
+
+        public JsonValueString() {
+        }
+
+        public JsonValueString(String value) {
+            this.value = value;
+        }
+
+        public static final int CONSTRUCTOR = 1597947313;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class JsonValueArray extends JsonValue {
+        public JsonValue[] values;
+
+        public JsonValueArray() {
+        }
+
+        public JsonValueArray(JsonValue[] values) {
+            this.values = values;
+        }
+
+        public static final int CONSTRUCTOR = -183913546;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class JsonValueObject extends JsonValue {
+        public JsonObjectMember[] members;
+
+        public JsonValueObject() {
+        }
+
+        public JsonValueObject(JsonObjectMember[] members) {
+            this.members = members;
+        }
+
+        public static final int CONSTRUCTOR = 520252026;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
     public static class KeyboardButton extends Object {
         public String text;
         public KeyboardButtonType type;
@@ -5041,21 +5274,39 @@ public class TdApi {
 
     public static class LanguagePackInfo extends Object {
         public String id;
+        public String baseLanguagePackId;
         public String name;
         public String nativeName;
+        public String pluralCode;
+        public boolean isOfficial;
+        public boolean isRtl;
+        public boolean isBeta;
+        public boolean isInstalled;
+        public int totalStringCount;
+        public int translatedStringCount;
         public int localStringCount;
+        public String translationUrl;
 
         public LanguagePackInfo() {
         }
 
-        public LanguagePackInfo(String id, String name, String nativeName, int localStringCount) {
+        public LanguagePackInfo(String id, String baseLanguagePackId, String name, String nativeName, String pluralCode, boolean isOfficial, boolean isRtl, boolean isBeta, boolean isInstalled, int totalStringCount, int translatedStringCount, int localStringCount, String translationUrl) {
             this.id = id;
+            this.baseLanguagePackId = baseLanguagePackId;
             this.name = name;
             this.nativeName = nativeName;
+            this.pluralCode = pluralCode;
+            this.isOfficial = isOfficial;
+            this.isRtl = isRtl;
+            this.isBeta = isBeta;
+            this.isInstalled = isInstalled;
+            this.totalStringCount = totalStringCount;
+            this.translatedStringCount = translatedStringCount;
             this.localStringCount = localStringCount;
+            this.translationUrl = translationUrl;
         }
 
-        public static final int CONSTRUCTOR = 1716484242;
+        public static final int CONSTRUCTOR = 542199642;
 
         @Override
         public int getConstructor() {
@@ -5211,23 +5462,25 @@ public class TdApi {
         public boolean canBeDeleted;
         public boolean isDownloadingActive;
         public boolean isDownloadingCompleted;
+        public int downloadOffset;
         public int downloadedPrefixSize;
         public int downloadedSize;
 
         public LocalFile() {
         }
 
-        public LocalFile(String path, boolean canBeDownloaded, boolean canBeDeleted, boolean isDownloadingActive, boolean isDownloadingCompleted, int downloadedPrefixSize, int downloadedSize) {
+        public LocalFile(String path, boolean canBeDownloaded, boolean canBeDeleted, boolean isDownloadingActive, boolean isDownloadingCompleted, int downloadOffset, int downloadedPrefixSize, int downloadedSize) {
             this.path = path;
             this.canBeDownloaded = canBeDownloaded;
             this.canBeDeleted = canBeDeleted;
             this.isDownloadingActive = isDownloadingActive;
             this.isDownloadingCompleted = isDownloadingCompleted;
+            this.downloadOffset = downloadOffset;
             this.downloadedPrefixSize = downloadedPrefixSize;
             this.downloadedSize = downloadedSize;
         }
 
-        public static final int CONSTRUCTOR = 847939462;
+        public static final int CONSTRUCTOR = -1166400317;
 
         @Override
         public int getConstructor() {
@@ -5266,6 +5519,91 @@ public class TdApi {
         }
 
         public static final int CONSTRUCTOR = 749028016;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public abstract static class LogStream extends Object {
+    }
+
+    public static class LogStreamDefault extends LogStream {
+
+        public LogStreamDefault() {
+        }
+
+        public static final int CONSTRUCTOR = 1390581436;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class LogStreamFile extends LogStream {
+        public String path;
+        public long maxFileSize;
+
+        public LogStreamFile() {
+        }
+
+        public LogStreamFile(String path, long maxFileSize) {
+            this.path = path;
+            this.maxFileSize = maxFileSize;
+        }
+
+        public static final int CONSTRUCTOR = -1880085930;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class LogStreamEmpty extends LogStream {
+
+        public LogStreamEmpty() {
+        }
+
+        public static final int CONSTRUCTOR = -499912244;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class LogTags extends Object {
+        public String[] tags;
+
+        public LogTags() {
+        }
+
+        public LogTags(String[] tags) {
+            this.tags = tags;
+        }
+
+        public static final int CONSTRUCTOR = -1604930601;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class LogVerbosityLevel extends Object {
+        public int verbosityLevel;
+
+        public LogVerbosityLevel() {
+        }
+
+        public LogVerbosityLevel(int verbosityLevel) {
+            this.verbosityLevel = verbosityLevel;
+        }
+
+        public static final int CONSTRUCTOR = 1734624234;
 
         @Override
         public int getConstructor() {
@@ -5406,7 +5744,7 @@ public class TdApi {
             this.replyMarkup = replyMarkup;
         }
 
-        public static final int CONSTRUCTOR = -675737627;
+        public static final int CONSTRUCTOR = -1804824068;
 
         @Override
         public int getConstructor() {
@@ -5700,6 +6038,24 @@ public class TdApi {
         }
 
         public static final int CONSTRUCTOR = -69441162;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class MessagePoll extends MessageContent {
+        public Poll poll;
+
+        public MessagePoll() {
+        }
+
+        public MessagePoll(Poll poll) {
+            this.poll = poll;
+        }
+
+        public static final int CONSTRUCTOR = -662130099;
 
         @Override
         public int getConstructor() {
@@ -6160,26 +6516,23 @@ public class TdApi {
         }
     }
 
-    public abstract static class MessageForwardInfo extends Object {
-    }
-
-    public static class MessageForwardedFromUser extends MessageForwardInfo {
-        public int senderUserId;
+    public static class MessageForwardInfo extends Object {
+        public MessageForwardOrigin origin;
         public int date;
-        public long forwardedFromChatId;
-        public long forwardedFromMessageId;
+        public long fromChatId;
+        public long fromMessageId;
 
-        public MessageForwardedFromUser() {
+        public MessageForwardInfo() {
         }
 
-        public MessageForwardedFromUser(int senderUserId, int date, long forwardedFromChatId, long forwardedFromMessageId) {
-            this.senderUserId = senderUserId;
+        public MessageForwardInfo(MessageForwardOrigin origin, int date, long fromChatId, long fromMessageId) {
+            this.origin = origin;
             this.date = date;
-            this.forwardedFromChatId = forwardedFromChatId;
-            this.forwardedFromMessageId = forwardedFromMessageId;
+            this.fromChatId = fromChatId;
+            this.fromMessageId = fromMessageId;
         }
 
-        public static final int CONSTRUCTOR = 1004332765;
+        public static final int CONSTRUCTOR = -1622371186;
 
         @Override
         public int getConstructor() {
@@ -6187,27 +6540,60 @@ public class TdApi {
         }
     }
 
-    public static class MessageForwardedPost extends MessageForwardInfo {
+    public abstract static class MessageForwardOrigin extends Object {
+    }
+
+    public static class MessageForwardOriginUser extends MessageForwardOrigin {
+        public int senderUserId;
+
+        public MessageForwardOriginUser() {
+        }
+
+        public MessageForwardOriginUser(int senderUserId) {
+            this.senderUserId = senderUserId;
+        }
+
+        public static final int CONSTRUCTOR = 2781520;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class MessageForwardOriginHiddenUser extends MessageForwardOrigin {
+        public String senderName;
+
+        public MessageForwardOriginHiddenUser() {
+        }
+
+        public MessageForwardOriginHiddenUser(String senderName) {
+            this.senderName = senderName;
+        }
+
+        public static final int CONSTRUCTOR = -271257885;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class MessageForwardOriginChannel extends MessageForwardOrigin {
         public long chatId;
-        public String authorSignature;
-        public int date;
         public long messageId;
-        public long forwardedFromChatId;
-        public long forwardedFromMessageId;
+        public String authorSignature;
 
-        public MessageForwardedPost() {
+        public MessageForwardOriginChannel() {
         }
 
-        public MessageForwardedPost(long chatId, String authorSignature, int date, long messageId, long forwardedFromChatId, long forwardedFromMessageId) {
+        public MessageForwardOriginChannel(long chatId, long messageId, String authorSignature) {
             this.chatId = chatId;
-            this.authorSignature = authorSignature;
-            this.date = date;
             this.messageId = messageId;
-            this.forwardedFromChatId = forwardedFromChatId;
-            this.forwardedFromMessageId = forwardedFromMessageId;
+            this.authorSignature = authorSignature;
         }
 
-        public static final int CONSTRUCTOR = -244050875;
+        public static final int CONSTRUCTOR = 1490730723;
 
         @Override
         public int getConstructor() {
@@ -6403,6 +6789,109 @@ public class TdApi {
         }
     }
 
+    public static class Notification extends Object {
+        public int id;
+        public int date;
+        public NotificationType type;
+
+        public Notification() {
+        }
+
+        public Notification(int id, int date, NotificationType type) {
+            this.id = id;
+            this.date = date;
+            this.type = type;
+        }
+
+        public static final int CONSTRUCTOR = 926876603;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class NotificationGroup extends Object {
+        public int id;
+        public NotificationGroupType type;
+        public long chatId;
+        public int totalCount;
+        public Notification[] notifications;
+
+        public NotificationGroup() {
+        }
+
+        public NotificationGroup(int id, NotificationGroupType type, long chatId, int totalCount, Notification[] notifications) {
+            this.id = id;
+            this.type = type;
+            this.chatId = chatId;
+            this.totalCount = totalCount;
+            this.notifications = notifications;
+        }
+
+        public static final int CONSTRUCTOR = 780691541;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public abstract static class NotificationGroupType extends Object {
+    }
+
+    public static class NotificationGroupTypeMessages extends NotificationGroupType {
+
+        public NotificationGroupTypeMessages() {
+        }
+
+        public static final int CONSTRUCTOR = -1702481123;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class NotificationGroupTypeMentions extends NotificationGroupType {
+
+        public NotificationGroupTypeMentions() {
+        }
+
+        public static final int CONSTRUCTOR = -2050324051;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class NotificationGroupTypeSecretChat extends NotificationGroupType {
+
+        public NotificationGroupTypeSecretChat() {
+        }
+
+        public static final int CONSTRUCTOR = 1390759476;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class NotificationGroupTypeCalls extends NotificationGroupType {
+
+        public NotificationGroupTypeCalls() {
+        }
+
+        public static final int CONSTRUCTOR = 1379123538;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
     public abstract static class NotificationSettingsScope extends Object {
     }
 
@@ -6425,6 +6914,93 @@ public class TdApi {
         }
 
         public static final int CONSTRUCTOR = 1212142067;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class NotificationSettingsScopeChannelChats extends NotificationSettingsScope {
+
+        public NotificationSettingsScopeChannelChats() {
+        }
+
+        public static final int CONSTRUCTOR = 548013448;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public abstract static class NotificationType extends Object {
+    }
+
+    public static class NotificationTypeNewMessage extends NotificationType {
+        public Message message;
+
+        public NotificationTypeNewMessage() {
+        }
+
+        public NotificationTypeNewMessage(Message message) {
+            this.message = message;
+        }
+
+        public static final int CONSTRUCTOR = 1885935159;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class NotificationTypeNewSecretChat extends NotificationType {
+
+        public NotificationTypeNewSecretChat() {
+        }
+
+        public static final int CONSTRUCTOR = 1198638768;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class NotificationTypeNewCall extends NotificationType {
+        public int callId;
+
+        public NotificationTypeNewCall() {
+        }
+
+        public NotificationTypeNewCall(int callId) {
+            this.callId = callId;
+        }
+
+        public static final int CONSTRUCTOR = 1712734585;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class NotificationTypeNewPushMessage extends NotificationType {
+        public long messageId;
+        public int senderUserId;
+        public PushMessageContent content;
+
+        public NotificationTypeNewPushMessage() {
+        }
+
+        public NotificationTypeNewPushMessage(long messageId, int senderUserId, PushMessageContent content) {
+            this.messageId = messageId;
+            this.senderUserId = senderUserId;
+            this.content = content;
+        }
+
+        public static final int CONSTRUCTOR = 1167232404;
 
         @Override
         public int getConstructor() {
@@ -6634,6 +7210,24 @@ public class TdApi {
         }
     }
 
+    public static class PageBlockKicker extends PageBlock {
+        public RichText kicker;
+
+        public PageBlockKicker() {
+        }
+
+        public PageBlockKicker(RichText kicker) {
+            this.kicker = kicker;
+        }
+
+        public static final int CONSTRUCTOR = 1361282635;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
     public static class PageBlockParagraph extends PageBlock {
         public RichText text;
 
@@ -6722,18 +7316,16 @@ public class TdApi {
     }
 
     public static class PageBlockList extends PageBlock {
-        public RichText[] items;
-        public boolean isOrdered;
+        public PageBlockListItem[] items;
 
         public PageBlockList() {
         }
 
-        public PageBlockList(RichText[] items, boolean isOrdered) {
+        public PageBlockList(PageBlockListItem[] items) {
             this.items = items;
-            this.isOrdered = isOrdered;
         }
 
-        public static final int CONSTRUCTOR = -1752631674;
+        public static final int CONSTRUCTOR = -1037074852;
 
         @Override
         public int getConstructor() {
@@ -6743,17 +7335,17 @@ public class TdApi {
 
     public static class PageBlockBlockQuote extends PageBlock {
         public RichText text;
-        public RichText caption;
+        public RichText credit;
 
         public PageBlockBlockQuote() {
         }
 
-        public PageBlockBlockQuote(RichText text, RichText caption) {
+        public PageBlockBlockQuote(RichText text, RichText credit) {
             this.text = text;
-            this.caption = caption;
+            this.credit = credit;
         }
 
-        public static final int CONSTRUCTOR = -37421406;
+        public static final int CONSTRUCTOR = 1657834142;
 
         @Override
         public int getConstructor() {
@@ -6763,17 +7355,17 @@ public class TdApi {
 
     public static class PageBlockPullQuote extends PageBlock {
         public RichText text;
-        public RichText caption;
+        public RichText credit;
 
         public PageBlockPullQuote() {
         }
 
-        public PageBlockPullQuote(RichText text, RichText caption) {
+        public PageBlockPullQuote(RichText text, RichText credit) {
             this.text = text;
-            this.caption = caption;
+            this.credit = credit;
         }
 
-        public static final int CONSTRUCTOR = -1799498665;
+        public static final int CONSTRUCTOR = 490242317;
 
         @Override
         public int getConstructor() {
@@ -6783,19 +7375,19 @@ public class TdApi {
 
     public static class PageBlockAnimation extends PageBlock {
         public Animation animation;
-        public RichText caption;
+        public PageBlockCaption caption;
         public boolean needAutoplay;
 
         public PageBlockAnimation() {
         }
 
-        public PageBlockAnimation(Animation animation, RichText caption, boolean needAutoplay) {
+        public PageBlockAnimation(Animation animation, PageBlockCaption caption, boolean needAutoplay) {
             this.animation = animation;
             this.caption = caption;
             this.needAutoplay = needAutoplay;
         }
 
-        public static final int CONSTRUCTOR = 1639478661;
+        public static final int CONSTRUCTOR = 1355669513;
 
         @Override
         public int getConstructor() {
@@ -6805,17 +7397,17 @@ public class TdApi {
 
     public static class PageBlockAudio extends PageBlock {
         public Audio audio;
-        public RichText caption;
+        public PageBlockCaption caption;
 
         public PageBlockAudio() {
         }
 
-        public PageBlockAudio(Audio audio, RichText caption) {
+        public PageBlockAudio(Audio audio, PageBlockCaption caption) {
             this.audio = audio;
             this.caption = caption;
         }
 
-        public static final int CONSTRUCTOR = 1898245855;
+        public static final int CONSTRUCTOR = -63371245;
 
         @Override
         public int getConstructor() {
@@ -6825,17 +7417,19 @@ public class TdApi {
 
     public static class PageBlockPhoto extends PageBlock {
         public Photo photo;
-        public RichText caption;
+        public PageBlockCaption caption;
+        public String url;
 
         public PageBlockPhoto() {
         }
 
-        public PageBlockPhoto(Photo photo, RichText caption) {
+        public PageBlockPhoto(Photo photo, PageBlockCaption caption, String url) {
             this.photo = photo;
             this.caption = caption;
+            this.url = url;
         }
 
-        public static final int CONSTRUCTOR = -637181825;
+        public static final int CONSTRUCTOR = 417601156;
 
         @Override
         public int getConstructor() {
@@ -6845,21 +7439,21 @@ public class TdApi {
 
     public static class PageBlockVideo extends PageBlock {
         public Video video;
-        public RichText caption;
+        public PageBlockCaption caption;
         public boolean needAutoplay;
         public boolean isLooped;
 
         public PageBlockVideo() {
         }
 
-        public PageBlockVideo(Video video, RichText caption, boolean needAutoplay, boolean isLooped) {
+        public PageBlockVideo(Video video, PageBlockCaption caption, boolean needAutoplay, boolean isLooped) {
             this.video = video;
             this.caption = caption;
             this.needAutoplay = needAutoplay;
             this.isLooped = isLooped;
         }
 
-        public static final int CONSTRUCTOR = 1610373002;
+        public static final int CONSTRUCTOR = 510041394;
 
         @Override
         public int getConstructor() {
@@ -6891,14 +7485,14 @@ public class TdApi {
         public Photo posterPhoto;
         public int width;
         public int height;
-        public RichText caption;
+        public PageBlockCaption caption;
         public boolean isFullWidth;
         public boolean allowScrolling;
 
         public PageBlockEmbedded() {
         }
 
-        public PageBlockEmbedded(String url, String html, Photo posterPhoto, int width, int height, RichText caption, boolean isFullWidth, boolean allowScrolling) {
+        public PageBlockEmbedded(String url, String html, Photo posterPhoto, int width, int height, PageBlockCaption caption, boolean isFullWidth, boolean allowScrolling) {
             this.url = url;
             this.html = html;
             this.posterPhoto = posterPhoto;
@@ -6909,7 +7503,7 @@ public class TdApi {
             this.allowScrolling = allowScrolling;
         }
 
-        public static final int CONSTRUCTOR = -211257334;
+        public static final int CONSTRUCTOR = -1942577763;
 
         @Override
         public int getConstructor() {
@@ -6923,12 +7517,12 @@ public class TdApi {
         public Photo authorPhoto;
         public int date;
         public PageBlock[] pageBlocks;
-        public RichText caption;
+        public PageBlockCaption caption;
 
         public PageBlockEmbeddedPost() {
         }
 
-        public PageBlockEmbeddedPost(String url, String author, Photo authorPhoto, int date, PageBlock[] pageBlocks, RichText caption) {
+        public PageBlockEmbeddedPost(String url, String author, Photo authorPhoto, int date, PageBlock[] pageBlocks, PageBlockCaption caption) {
             this.url = url;
             this.author = author;
             this.authorPhoto = authorPhoto;
@@ -6937,7 +7531,7 @@ public class TdApi {
             this.caption = caption;
         }
 
-        public static final int CONSTRUCTOR = 1049948772;
+        public static final int CONSTRUCTOR = 397600949;
 
         @Override
         public int getConstructor() {
@@ -6947,17 +7541,17 @@ public class TdApi {
 
     public static class PageBlockCollage extends PageBlock {
         public PageBlock[] pageBlocks;
-        public RichText caption;
+        public PageBlockCaption caption;
 
         public PageBlockCollage() {
         }
 
-        public PageBlockCollage(PageBlock[] pageBlocks, RichText caption) {
+        public PageBlockCollage(PageBlock[] pageBlocks, PageBlockCaption caption) {
             this.pageBlocks = pageBlocks;
             this.caption = caption;
         }
 
-        public static final int CONSTRUCTOR = 911142202;
+        public static final int CONSTRUCTOR = 1163760110;
 
         @Override
         public int getConstructor() {
@@ -6967,17 +7561,17 @@ public class TdApi {
 
     public static class PageBlockSlideshow extends PageBlock {
         public PageBlock[] pageBlocks;
-        public RichText caption;
+        public PageBlockCaption caption;
 
         public PageBlockSlideshow() {
         }
 
-        public PageBlockSlideshow(PageBlock[] pageBlocks, RichText caption) {
+        public PageBlockSlideshow(PageBlock[] pageBlocks, PageBlockCaption caption) {
             this.pageBlocks = pageBlocks;
             this.caption = caption;
         }
 
-        public static final int CONSTRUCTOR = 178557514;
+        public static final int CONSTRUCTOR = 539217375;
 
         @Override
         public int getConstructor() {
@@ -7007,25 +7601,293 @@ public class TdApi {
         }
     }
 
+    public static class PageBlockTable extends PageBlock {
+        public RichText caption;
+        public PageBlockTableCell[][] cells;
+        public boolean isBordered;
+        public boolean isStriped;
+
+        public PageBlockTable() {
+        }
+
+        public PageBlockTable(RichText caption, PageBlockTableCell[][] cells, boolean isBordered, boolean isStriped) {
+            this.caption = caption;
+            this.cells = cells;
+            this.isBordered = isBordered;
+            this.isStriped = isStriped;
+        }
+
+        public static final int CONSTRUCTOR = -942649288;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PageBlockDetails extends PageBlock {
+        public RichText header;
+        public PageBlock[] pageBlocks;
+        public boolean isOpen;
+
+        public PageBlockDetails() {
+        }
+
+        public PageBlockDetails(RichText header, PageBlock[] pageBlocks, boolean isOpen) {
+            this.header = header;
+            this.pageBlocks = pageBlocks;
+            this.isOpen = isOpen;
+        }
+
+        public static final int CONSTRUCTOR = -1599869809;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PageBlockRelatedArticles extends PageBlock {
+        public RichText header;
+        public PageBlockRelatedArticle[] articles;
+
+        public PageBlockRelatedArticles() {
+        }
+
+        public PageBlockRelatedArticles(RichText header, PageBlockRelatedArticle[] articles) {
+            this.header = header;
+            this.articles = articles;
+        }
+
+        public static final int CONSTRUCTOR = -1807324374;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PageBlockMap extends PageBlock {
+        public Location location;
+        public int zoom;
+        public int width;
+        public int height;
+        public PageBlockCaption caption;
+
+        public PageBlockMap() {
+        }
+
+        public PageBlockMap(Location location, int zoom, int width, int height, PageBlockCaption caption) {
+            this.location = location;
+            this.zoom = zoom;
+            this.width = width;
+            this.height = height;
+            this.caption = caption;
+        }
+
+        public static final int CONSTRUCTOR = 1510961171;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PageBlockCaption extends Object {
+        public RichText text;
+        public RichText credit;
+
+        public PageBlockCaption() {
+        }
+
+        public PageBlockCaption(RichText text, RichText credit) {
+            this.text = text;
+            this.credit = credit;
+        }
+
+        public static final int CONSTRUCTOR = -1180064650;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public abstract static class PageBlockHorizontalAlignment extends Object {
+    }
+
+    public static class PageBlockHorizontalAlignmentLeft extends PageBlockHorizontalAlignment {
+
+        public PageBlockHorizontalAlignmentLeft() {
+        }
+
+        public static final int CONSTRUCTOR = 848701417;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PageBlockHorizontalAlignmentCenter extends PageBlockHorizontalAlignment {
+
+        public PageBlockHorizontalAlignmentCenter() {
+        }
+
+        public static final int CONSTRUCTOR = -1009203990;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PageBlockHorizontalAlignmentRight extends PageBlockHorizontalAlignment {
+
+        public PageBlockHorizontalAlignmentRight() {
+        }
+
+        public static final int CONSTRUCTOR = 1371369214;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PageBlockListItem extends Object {
+        public String label;
+        public PageBlock[] pageBlocks;
+
+        public PageBlockListItem() {
+        }
+
+        public PageBlockListItem(String label, PageBlock[] pageBlocks) {
+            this.label = label;
+            this.pageBlocks = pageBlocks;
+        }
+
+        public static final int CONSTRUCTOR = 323186259;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PageBlockRelatedArticle extends Object {
+        public String url;
+        public String title;
+        public String description;
+        public Photo photo;
+        public String author;
+        public int publishDate;
+
+        public PageBlockRelatedArticle() {
+        }
+
+        public PageBlockRelatedArticle(String url, String title, String description, Photo photo, String author, int publishDate) {
+            this.url = url;
+            this.title = title;
+            this.description = description;
+            this.photo = photo;
+            this.author = author;
+            this.publishDate = publishDate;
+        }
+
+        public static final int CONSTRUCTOR = 481199251;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PageBlockTableCell extends Object {
+        public RichText text;
+        public boolean isHeader;
+        public int colspan;
+        public int rowspan;
+        public PageBlockHorizontalAlignment align;
+        public PageBlockVerticalAlignment valign;
+
+        public PageBlockTableCell() {
+        }
+
+        public PageBlockTableCell(RichText text, boolean isHeader, int colspan, int rowspan, PageBlockHorizontalAlignment align, PageBlockVerticalAlignment valign) {
+            this.text = text;
+            this.isHeader = isHeader;
+            this.colspan = colspan;
+            this.rowspan = rowspan;
+            this.align = align;
+            this.valign = valign;
+        }
+
+        public static final int CONSTRUCTOR = 1417658214;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public abstract static class PageBlockVerticalAlignment extends Object {
+    }
+
+    public static class PageBlockVerticalAlignmentTop extends PageBlockVerticalAlignment {
+
+        public PageBlockVerticalAlignmentTop() {
+        }
+
+        public static final int CONSTRUCTOR = 195500454;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PageBlockVerticalAlignmentMiddle extends PageBlockVerticalAlignment {
+
+        public PageBlockVerticalAlignmentMiddle() {
+        }
+
+        public static final int CONSTRUCTOR = -2123096587;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PageBlockVerticalAlignmentBottom extends PageBlockVerticalAlignment {
+
+        public PageBlockVerticalAlignmentBottom() {
+        }
+
+        public static final int CONSTRUCTOR = 2092531158;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
     public static class PassportAuthorizationForm extends Object {
         public int id;
         public PassportRequiredElement[] requiredElements;
-        public PassportElement[] elements;
-        public PassportElementError[] errors;
         public String privacyPolicyUrl;
 
         public PassportAuthorizationForm() {
         }
 
-        public PassportAuthorizationForm(int id, PassportRequiredElement[] requiredElements, PassportElement[] elements, PassportElementError[] errors, String privacyPolicyUrl) {
+        public PassportAuthorizationForm(int id, PassportRequiredElement[] requiredElements, String privacyPolicyUrl) {
             this.id = id;
             this.requiredElements = requiredElements;
-            this.elements = elements;
-            this.errors = errors;
             this.privacyPolicyUrl = privacyPolicyUrl;
         }
 
-        public static final int CONSTRUCTOR = -1780995944;
+        public static final int CONSTRUCTOR = -1070673218;
 
         @Override
         public int getConstructor() {
@@ -7366,11 +8228,16 @@ public class TdApi {
     }
 
     public static class PassportElementErrorSourceTranslationFile extends PassportElementErrorSource {
+        public int fileIndex;
 
         public PassportElementErrorSourceTranslationFile() {
         }
 
-        public static final int CONSTRUCTOR = -643919323;
+        public PassportElementErrorSourceTranslationFile(int fileIndex) {
+            this.fileIndex = fileIndex;
+        }
+
+        public static final int CONSTRUCTOR = -689621228;
 
         @Override
         public int getConstructor() {
@@ -7392,11 +8259,16 @@ public class TdApi {
     }
 
     public static class PassportElementErrorSourceFile extends PassportElementErrorSource {
+        public int fileIndex;
 
         public PassportElementErrorSourceFile() {
         }
 
-        public static final int CONSTRUCTOR = -226596202;
+        public PassportElementErrorSourceFile(int fileIndex) {
+            this.fileIndex = fileIndex;
+        }
+
+        public static final int CONSTRUCTOR = 2020358960;
 
         @Override
         public int getConstructor() {
@@ -7607,6 +8479,26 @@ public class TdApi {
         }
     }
 
+    public static class PassportElementsWithErrors extends Object {
+        public PassportElement[] elements;
+        public PassportElementError[] errors;
+
+        public PassportElementsWithErrors() {
+        }
+
+        public PassportElementsWithErrors(PassportElement[] elements, PassportElementError[] errors) {
+            this.elements = elements;
+            this.errors = errors;
+        }
+
+        public static final int CONSTRUCTOR = 1308923044;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
     public static class PassportRequiredElement extends Object {
         public PassportSuitableElement[] suitableElements;
 
@@ -7654,20 +8546,20 @@ public class TdApi {
         public String passwordHint;
         public boolean hasRecoveryEmailAddress;
         public boolean hasPassportData;
-        public String unconfirmedRecoveryEmailAddressPattern;
+        public EmailAddressAuthenticationCodeInfo recoveryEmailAddressCodeInfo;
 
         public PasswordState() {
         }
 
-        public PasswordState(boolean hasPassword, String passwordHint, boolean hasRecoveryEmailAddress, boolean hasPassportData, String unconfirmedRecoveryEmailAddressPattern) {
+        public PasswordState(boolean hasPassword, String passwordHint, boolean hasRecoveryEmailAddress, boolean hasPassportData, EmailAddressAuthenticationCodeInfo recoveryEmailAddressCodeInfo) {
             this.hasPassword = hasPassword;
             this.passwordHint = passwordHint;
             this.hasRecoveryEmailAddress = hasRecoveryEmailAddress;
             this.hasPassportData = hasPassportData;
-            this.unconfirmedRecoveryEmailAddressPattern = unconfirmedRecoveryEmailAddressPattern;
+            this.recoveryEmailAddressCodeInfo = recoveryEmailAddressCodeInfo;
         }
 
-        public static final int CONSTRUCTOR = -1209872059;
+        public static final int CONSTRUCTOR = -1154797731;
 
         @Override
         public int getConstructor() {
@@ -7834,20 +8726,18 @@ public class TdApi {
     }
 
     public static class Photo extends Object {
-        public long id;
         public boolean hasStickers;
         public PhotoSize[] sizes;
 
         public Photo() {
         }
 
-        public Photo(long id, boolean hasStickers, PhotoSize[] sizes) {
-            this.id = id;
+        public Photo(boolean hasStickers, PhotoSize[] sizes) {
             this.hasStickers = hasStickers;
             this.sizes = sizes;
         }
 
-        public static final int CONSTRUCTOR = -1949521787;
+        public static final int CONSTRUCTOR = -1740448343;
 
         @Override
         public int getConstructor() {
@@ -7872,6 +8762,58 @@ public class TdApi {
         }
 
         public static final int CONSTRUCTOR = 421980227;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class Poll extends Object {
+        public long id;
+        public String question;
+        public PollOption[] options;
+        public int totalVoterCount;
+        public boolean isClosed;
+
+        public Poll() {
+        }
+
+        public Poll(long id, String question, PollOption[] options, int totalVoterCount, boolean isClosed) {
+            this.id = id;
+            this.question = question;
+            this.options = options;
+            this.totalVoterCount = totalVoterCount;
+            this.isClosed = isClosed;
+        }
+
+        public static final int CONSTRUCTOR = -959396214;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PollOption extends Object {
+        public String text;
+        public int voterCount;
+        public int votePercentage;
+        public boolean isChosen;
+        public boolean isBeingChosen;
+
+        public PollOption() {
+        }
+
+        public PollOption(String text, int voterCount, int votePercentage, boolean isChosen, boolean isBeingChosen) {
+            this.text = text;
+            this.voterCount = voterCount;
+            this.votePercentage = votePercentage;
+            this.isChosen = isChosen;
+            this.isBeingChosen = isBeingChosen;
+        }
+
+        public static final int CONSTRUCTOR = 1473893797;
 
         @Override
         public int getConstructor() {
@@ -8023,6 +8965,526 @@ public class TdApi {
         }
 
         public static final int CONSTRUCTOR = -679603433;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public abstract static class PushMessageContent extends Object {
+    }
+
+    public static class PushMessageContentHidden extends PushMessageContent {
+        public boolean isPinned;
+
+        public PushMessageContentHidden() {
+        }
+
+        public PushMessageContentHidden(boolean isPinned) {
+            this.isPinned = isPinned;
+        }
+
+        public static final int CONSTRUCTOR = -316950436;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PushMessageContentAnimation extends PushMessageContent {
+        public Animation animation;
+        public String caption;
+        public boolean isPinned;
+
+        public PushMessageContentAnimation() {
+        }
+
+        public PushMessageContentAnimation(Animation animation, String caption, boolean isPinned) {
+            this.animation = animation;
+            this.caption = caption;
+            this.isPinned = isPinned;
+        }
+
+        public static final int CONSTRUCTOR = 1034215396;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PushMessageContentAudio extends PushMessageContent {
+        public Audio audio;
+        public boolean isPinned;
+
+        public PushMessageContentAudio() {
+        }
+
+        public PushMessageContentAudio(Audio audio, boolean isPinned) {
+            this.audio = audio;
+            this.isPinned = isPinned;
+        }
+
+        public static final int CONSTRUCTOR = 381581426;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PushMessageContentContact extends PushMessageContent {
+        public String name;
+        public boolean isPinned;
+
+        public PushMessageContentContact() {
+        }
+
+        public PushMessageContentContact(String name, boolean isPinned) {
+            this.name = name;
+            this.isPinned = isPinned;
+        }
+
+        public static final int CONSTRUCTOR = -12219820;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PushMessageContentContactRegistered extends PushMessageContent {
+
+        public PushMessageContentContactRegistered() {
+        }
+
+        public static final int CONSTRUCTOR = -303962720;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PushMessageContentDocument extends PushMessageContent {
+        public Document document;
+        public boolean isPinned;
+
+        public PushMessageContentDocument() {
+        }
+
+        public PushMessageContentDocument(Document document, boolean isPinned) {
+            this.document = document;
+            this.isPinned = isPinned;
+        }
+
+        public static final int CONSTRUCTOR = -458379775;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PushMessageContentGame extends PushMessageContent {
+        public String title;
+        public boolean isPinned;
+
+        public PushMessageContentGame() {
+        }
+
+        public PushMessageContentGame(String title, boolean isPinned) {
+            this.title = title;
+            this.isPinned = isPinned;
+        }
+
+        public static final int CONSTRUCTOR = -515131109;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PushMessageContentGameScore extends PushMessageContent {
+        public String title;
+        public int score;
+        public boolean isPinned;
+
+        public PushMessageContentGameScore() {
+        }
+
+        public PushMessageContentGameScore(String title, int score, boolean isPinned) {
+            this.title = title;
+            this.score = score;
+            this.isPinned = isPinned;
+        }
+
+        public static final int CONSTRUCTOR = 901303688;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PushMessageContentInvoice extends PushMessageContent {
+        public String price;
+        public boolean isPinned;
+
+        public PushMessageContentInvoice() {
+        }
+
+        public PushMessageContentInvoice(String price, boolean isPinned) {
+            this.price = price;
+            this.isPinned = isPinned;
+        }
+
+        public static final int CONSTRUCTOR = -1731687492;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PushMessageContentLocation extends PushMessageContent {
+        public boolean isLive;
+        public boolean isPinned;
+
+        public PushMessageContentLocation() {
+        }
+
+        public PushMessageContentLocation(boolean isLive, boolean isPinned) {
+            this.isLive = isLive;
+            this.isPinned = isPinned;
+        }
+
+        public static final int CONSTRUCTOR = -1288005709;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PushMessageContentPhoto extends PushMessageContent {
+        public Photo photo;
+        public String caption;
+        public boolean isSecret;
+        public boolean isPinned;
+
+        public PushMessageContentPhoto() {
+        }
+
+        public PushMessageContentPhoto(Photo photo, String caption, boolean isSecret, boolean isPinned) {
+            this.photo = photo;
+            this.caption = caption;
+            this.isSecret = isSecret;
+            this.isPinned = isPinned;
+        }
+
+        public static final int CONSTRUCTOR = 140631122;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PushMessageContentPoll extends PushMessageContent {
+        public String question;
+        public boolean isPinned;
+
+        public PushMessageContentPoll() {
+        }
+
+        public PushMessageContentPoll(String question, boolean isPinned) {
+            this.question = question;
+            this.isPinned = isPinned;
+        }
+
+        public static final int CONSTRUCTOR = -1545438580;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PushMessageContentScreenshotTaken extends PushMessageContent {
+
+        public PushMessageContentScreenshotTaken() {
+        }
+
+        public static final int CONSTRUCTOR = 214245369;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PushMessageContentSticker extends PushMessageContent {
+        public Sticker sticker;
+        public String emoji;
+        public boolean isPinned;
+
+        public PushMessageContentSticker() {
+        }
+
+        public PushMessageContentSticker(Sticker sticker, String emoji, boolean isPinned) {
+            this.sticker = sticker;
+            this.emoji = emoji;
+            this.isPinned = isPinned;
+        }
+
+        public static final int CONSTRUCTOR = 1553513939;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PushMessageContentText extends PushMessageContent {
+        public String text;
+        public boolean isPinned;
+
+        public PushMessageContentText() {
+        }
+
+        public PushMessageContentText(String text, boolean isPinned) {
+            this.text = text;
+            this.isPinned = isPinned;
+        }
+
+        public static final int CONSTRUCTOR = 274587305;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PushMessageContentVideo extends PushMessageContent {
+        public Video video;
+        public String caption;
+        public boolean isSecret;
+        public boolean isPinned;
+
+        public PushMessageContentVideo() {
+        }
+
+        public PushMessageContentVideo(Video video, String caption, boolean isSecret, boolean isPinned) {
+            this.video = video;
+            this.caption = caption;
+            this.isSecret = isSecret;
+            this.isPinned = isPinned;
+        }
+
+        public static final int CONSTRUCTOR = 310038831;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PushMessageContentVideoNote extends PushMessageContent {
+        public VideoNote videoNote;
+        public boolean isPinned;
+
+        public PushMessageContentVideoNote() {
+        }
+
+        public PushMessageContentVideoNote(VideoNote videoNote, boolean isPinned) {
+            this.videoNote = videoNote;
+            this.isPinned = isPinned;
+        }
+
+        public static final int CONSTRUCTOR = -1122764417;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PushMessageContentVoiceNote extends PushMessageContent {
+        public VoiceNote voiceNote;
+        public boolean isPinned;
+
+        public PushMessageContentVoiceNote() {
+        }
+
+        public PushMessageContentVoiceNote(VoiceNote voiceNote, boolean isPinned) {
+            this.voiceNote = voiceNote;
+            this.isPinned = isPinned;
+        }
+
+        public static final int CONSTRUCTOR = 88910987;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PushMessageContentBasicGroupChatCreate extends PushMessageContent {
+
+        public PushMessageContentBasicGroupChatCreate() {
+        }
+
+        public static final int CONSTRUCTOR = -2114855172;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PushMessageContentChatAddMembers extends PushMessageContent {
+        public String memberName;
+        public boolean isCurrentUser;
+        public boolean isReturned;
+
+        public PushMessageContentChatAddMembers() {
+        }
+
+        public PushMessageContentChatAddMembers(String memberName, boolean isCurrentUser, boolean isReturned) {
+            this.memberName = memberName;
+            this.isCurrentUser = isCurrentUser;
+            this.isReturned = isReturned;
+        }
+
+        public static final int CONSTRUCTOR = -1087145158;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PushMessageContentChatChangePhoto extends PushMessageContent {
+
+        public PushMessageContentChatChangePhoto() {
+        }
+
+        public static final int CONSTRUCTOR = -1114222051;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PushMessageContentChatChangeTitle extends PushMessageContent {
+        public String title;
+
+        public PushMessageContentChatChangeTitle() {
+        }
+
+        public PushMessageContentChatChangeTitle(String title) {
+            this.title = title;
+        }
+
+        public static final int CONSTRUCTOR = -1964902749;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PushMessageContentChatDeleteMember extends PushMessageContent {
+        public String memberName;
+        public boolean isCurrentUser;
+        public boolean isLeft;
+
+        public PushMessageContentChatDeleteMember() {
+        }
+
+        public PushMessageContentChatDeleteMember(String memberName, boolean isCurrentUser, boolean isLeft) {
+            this.memberName = memberName;
+            this.isCurrentUser = isCurrentUser;
+            this.isLeft = isLeft;
+        }
+
+        public static final int CONSTRUCTOR = 598714783;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PushMessageContentChatJoinByLink extends PushMessageContent {
+
+        public PushMessageContentChatJoinByLink() {
+        }
+
+        public static final int CONSTRUCTOR = 1553719113;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PushMessageContentMessageForwards extends PushMessageContent {
+        public int totalCount;
+
+        public PushMessageContentMessageForwards() {
+        }
+
+        public PushMessageContentMessageForwards(int totalCount) {
+            this.totalCount = totalCount;
+        }
+
+        public static final int CONSTRUCTOR = -1913083876;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PushMessageContentMediaAlbum extends PushMessageContent {
+        public int totalCount;
+        public boolean hasPhotos;
+        public boolean hasVideos;
+
+        public PushMessageContentMediaAlbum() {
+        }
+
+        public PushMessageContentMediaAlbum(int totalCount, boolean hasPhotos, boolean hasVideos) {
+            this.totalCount = totalCount;
+            this.hasPhotos = hasPhotos;
+            this.hasVideos = hasVideos;
+        }
+
+        public static final int CONSTRUCTOR = -874278109;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class PushReceiverId extends Object {
+        public long id;
+
+        public PushReceiverId() {
+        }
+
+        public PushReceiverId(long id) {
+            this.id = id;
+        }
+
+        public static final int CONSTRUCTOR = 371056428;
 
         @Override
         public int getConstructor() {
@@ -8304,6 +9766,122 @@ public class TdApi {
         }
     }
 
+    public static class RichTextSubscript extends RichText {
+        public RichText text;
+
+        public RichTextSubscript() {
+        }
+
+        public RichTextSubscript(RichText text) {
+            this.text = text;
+        }
+
+        public static final int CONSTRUCTOR = -868197812;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class RichTextSuperscript extends RichText {
+        public RichText text;
+
+        public RichTextSuperscript() {
+        }
+
+        public RichTextSuperscript(RichText text) {
+            this.text = text;
+        }
+
+        public static final int CONSTRUCTOR = -382241437;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class RichTextMarked extends RichText {
+        public RichText text;
+
+        public RichTextMarked() {
+        }
+
+        public RichTextMarked(RichText text) {
+            this.text = text;
+        }
+
+        public static final int CONSTRUCTOR = -1271999614;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class RichTextPhoneNumber extends RichText {
+        public RichText text;
+        public String phoneNumber;
+
+        public RichTextPhoneNumber() {
+        }
+
+        public RichTextPhoneNumber(RichText text, String phoneNumber) {
+            this.text = text;
+            this.phoneNumber = phoneNumber;
+        }
+
+        public static final int CONSTRUCTOR = 128521539;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class RichTextIcon extends RichText {
+        public Document document;
+        public int width;
+        public int height;
+
+        public RichTextIcon() {
+        }
+
+        public RichTextIcon(Document document, int width, int height) {
+            this.document = document;
+            this.width = width;
+            this.height = height;
+        }
+
+        public static final int CONSTRUCTOR = -1480316158;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class RichTextAnchor extends RichText {
+        public RichText text;
+        public String name;
+
+        public RichTextAnchor() {
+        }
+
+        public RichTextAnchor(RichText text, String name) {
+            this.text = text;
+            this.name = name;
+        }
+
+        public static final int CONSTRUCTOR = 673137292;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
     public static class RichTexts extends RichText {
         public RichText[] texts;
 
@@ -8346,17 +9924,21 @@ public class TdApi {
         public int muteFor;
         public String sound;
         public boolean showPreview;
+        public boolean disablePinnedMessageNotifications;
+        public boolean disableMentionNotifications;
 
         public ScopeNotificationSettings() {
         }
 
-        public ScopeNotificationSettings(int muteFor, String sound, boolean showPreview) {
+        public ScopeNotificationSettings(int muteFor, String sound, boolean showPreview, boolean disablePinnedMessageNotifications, boolean disableMentionNotifications) {
             this.muteFor = muteFor;
             this.sound = sound;
             this.showPreview = showPreview;
+            this.disablePinnedMessageNotifications = disablePinnedMessageNotifications;
+            this.disableMentionNotifications = disableMentionNotifications;
         }
 
-        public static final int CONSTRUCTOR = 607439283;
+        public static final int CONSTRUCTOR = -426103745;
 
         @Override
         public int getConstructor() {
@@ -8668,6 +10250,7 @@ public class TdApi {
     public static class Session extends Object {
         public long id;
         public boolean isCurrent;
+        public boolean isPasswordPending;
         public int apiId;
         public String applicationName;
         public String applicationVersion;
@@ -8684,9 +10267,10 @@ public class TdApi {
         public Session() {
         }
 
-        public Session(long id, boolean isCurrent, int apiId, String applicationName, String applicationVersion, boolean isOfficialApplication, String deviceModel, String platform, String systemVersion, int logInDate, int lastActiveDate, String ip, String country, String region) {
+        public Session(long id, boolean isCurrent, boolean isPasswordPending, int apiId, String applicationName, String applicationVersion, boolean isOfficialApplication, String deviceModel, String platform, String systemVersion, int logInDate, int lastActiveDate, String ip, String country, String region) {
             this.id = id;
             this.isCurrent = isCurrent;
+            this.isPasswordPending = isPasswordPending;
             this.apiId = apiId;
             this.applicationName = applicationName;
             this.applicationVersion = applicationVersion;
@@ -8701,7 +10285,7 @@ public class TdApi {
             this.region = region;
         }
 
-        public static final int CONSTRUCTOR = 1715359000;
+        public static final int CONSTRUCTOR = 1920553176;
 
         @Override
         public int getConstructor() {
@@ -8981,17 +10565,21 @@ public class TdApi {
         public long filesSize;
         public int fileCount;
         public long databaseSize;
+        public long languagePackDatabaseSize;
+        public long logSize;
 
         public StorageStatisticsFast() {
         }
 
-        public StorageStatisticsFast(long filesSize, int fileCount, long databaseSize) {
+        public StorageStatisticsFast(long filesSize, int fileCount, long databaseSize, long languagePackDatabaseSize, long logSize) {
             this.filesSize = filesSize;
             this.fileCount = fileCount;
             this.databaseSize = databaseSize;
+            this.languagePackDatabaseSize = languagePackDatabaseSize;
+            this.logSize = logSize;
         }
 
-        public static final int CONSTRUCTOR = -2005401007;
+        public static final int CONSTRUCTOR = -884922271;
 
         @Override
         public int getConstructor() {
@@ -9044,17 +10632,17 @@ public class TdApi {
         public boolean canGetMembers;
         public boolean canSetUsername;
         public boolean canSetStickerSet;
+        public boolean canViewStatistics;
         public boolean isAllHistoryAvailable;
         public long stickerSetId;
         public String inviteLink;
-        public long pinnedMessageId;
         public int upgradedFromBasicGroupId;
         public long upgradedFromMaxMessageId;
 
         public SupergroupFullInfo() {
         }
 
-        public SupergroupFullInfo(String description, int memberCount, int administratorCount, int restrictedCount, int bannedCount, boolean canGetMembers, boolean canSetUsername, boolean canSetStickerSet, boolean isAllHistoryAvailable, long stickerSetId, String inviteLink, long pinnedMessageId, int upgradedFromBasicGroupId, long upgradedFromMaxMessageId) {
+        public SupergroupFullInfo(String description, int memberCount, int administratorCount, int restrictedCount, int bannedCount, boolean canGetMembers, boolean canSetUsername, boolean canSetStickerSet, boolean canViewStatistics, boolean isAllHistoryAvailable, long stickerSetId, String inviteLink, int upgradedFromBasicGroupId, long upgradedFromMaxMessageId) {
             this.description = description;
             this.memberCount = memberCount;
             this.administratorCount = administratorCount;
@@ -9063,15 +10651,15 @@ public class TdApi {
             this.canGetMembers = canGetMembers;
             this.canSetUsername = canSetUsername;
             this.canSetStickerSet = canSetStickerSet;
+            this.canViewStatistics = canViewStatistics;
             this.isAllHistoryAvailable = isAllHistoryAvailable;
             this.stickerSetId = stickerSetId;
             this.inviteLink = inviteLink;
-            this.pinnedMessageId = pinnedMessageId;
             this.upgradedFromBasicGroupId = upgradedFromBasicGroupId;
             this.upgradedFromMaxMessageId = upgradedFromMaxMessageId;
         }
 
-        public static final int CONSTRUCTOR = -1482349223;
+        public static final int CONSTRUCTOR = 1524634784;
 
         @Override
         public int getConstructor() {
@@ -9893,19 +11481,15 @@ public class TdApi {
 
     public static class UpdateNewMessage extends Update {
         public Message message;
-        public boolean disableNotification;
-        public boolean containsMention;
 
         public UpdateNewMessage() {
         }
 
-        public UpdateNewMessage(Message message, boolean disableNotification, boolean containsMention) {
+        public UpdateNewMessage(Message message) {
             this.message = message;
-            this.disableNotification = disableNotification;
-            this.containsMention = containsMention;
         }
 
-        public static final int CONSTRUCTOR = 238944219;
+        public static final int CONSTRUCTOR = -563105266;
 
         @Override
         public int getConstructor() {
@@ -10373,6 +11957,26 @@ public class TdApi {
         }
     }
 
+    public static class UpdateChatPinnedMessage extends Update {
+        public long chatId;
+        public long pinnedMessageId;
+
+        public UpdateChatPinnedMessage() {
+        }
+
+        public UpdateChatPinnedMessage(long chatId, long pinnedMessageId) {
+            this.chatId = chatId;
+            this.pinnedMessageId = pinnedMessageId;
+        }
+
+        public static final int CONSTRUCTOR = 802160507;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
     public static class UpdateChatReplyMarkup extends Update {
         public long chatId;
         public long replyMarkupMessageId;
@@ -10408,6 +12012,116 @@ public class TdApi {
         }
 
         public static final int CONSTRUCTOR = -1436617498;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class UpdateChatOnlineMemberCount extends Update {
+        public long chatId;
+        public int onlineMemberCount;
+
+        public UpdateChatOnlineMemberCount() {
+        }
+
+        public UpdateChatOnlineMemberCount(long chatId, int onlineMemberCount) {
+            this.chatId = chatId;
+            this.onlineMemberCount = onlineMemberCount;
+        }
+
+        public static final int CONSTRUCTOR = 487369373;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class UpdateNotification extends Update {
+        public int notificationGroupId;
+        public Notification notification;
+
+        public UpdateNotification() {
+        }
+
+        public UpdateNotification(int notificationGroupId, Notification notification) {
+            this.notificationGroupId = notificationGroupId;
+            this.notification = notification;
+        }
+
+        public static final int CONSTRUCTOR = -1897496876;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class UpdateNotificationGroup extends Update {
+        public int notificationGroupId;
+        public NotificationGroupType type;
+        public long chatId;
+        public long notificationSettingsChatId;
+        public boolean isSilent;
+        public int totalCount;
+        public Notification[] addedNotifications;
+        public int[] removedNotificationIds;
+
+        public UpdateNotificationGroup() {
+        }
+
+        public UpdateNotificationGroup(int notificationGroupId, NotificationGroupType type, long chatId, long notificationSettingsChatId, boolean isSilent, int totalCount, Notification[] addedNotifications, int[] removedNotificationIds) {
+            this.notificationGroupId = notificationGroupId;
+            this.type = type;
+            this.chatId = chatId;
+            this.notificationSettingsChatId = notificationSettingsChatId;
+            this.isSilent = isSilent;
+            this.totalCount = totalCount;
+            this.addedNotifications = addedNotifications;
+            this.removedNotificationIds = removedNotificationIds;
+        }
+
+        public static final int CONSTRUCTOR = -2049005665;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class UpdateActiveNotifications extends Update {
+        public NotificationGroup[] groups;
+
+        public UpdateActiveNotifications() {
+        }
+
+        public UpdateActiveNotifications(NotificationGroup[] groups) {
+            this.groups = groups;
+        }
+
+        public static final int CONSTRUCTOR = -1306672221;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class UpdateHavePendingNotifications extends Update {
+        public boolean haveDelayedNotifications;
+        public boolean haveUnreceivedNotifications;
+
+        public UpdateHavePendingNotifications() {
+        }
+
+        public UpdateHavePendingNotifications(boolean haveDelayedNotifications, boolean haveUnreceivedNotifications) {
+            this.haveDelayedNotifications = haveDelayedNotifications;
+            this.haveUnreceivedNotifications = haveUnreceivedNotifications;
+        }
+
+        public static final int CONSTRUCTOR = 179233243;
 
         @Override
         public int getConstructor() {
@@ -11149,6 +12863,42 @@ public class TdApi {
         }
     }
 
+    public static class UpdatePoll extends Update {
+        public Poll poll;
+
+        public UpdatePoll() {
+        }
+
+        public UpdatePoll(Poll poll) {
+            this.poll = poll;
+        }
+
+        public static final int CONSTRUCTOR = -1771342902;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class Updates extends Object {
+        public Update[] updates;
+
+        public Updates() {
+        }
+
+        public Updates(Update[] updates) {
+            this.updates = updates;
+        }
+
+        public static final int CONSTRUCTOR = 475842347;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
     public static class User extends Object {
         public int id;
         public String firstName;
@@ -11160,6 +12910,7 @@ public class TdApi {
         public LinkState outgoingLink;
         public LinkState incomingLink;
         public boolean isVerified;
+        public boolean isSupport;
         public String restrictionReason;
         public boolean haveAccess;
         public UserType type;
@@ -11168,7 +12919,7 @@ public class TdApi {
         public User() {
         }
 
-        public User(int id, String firstName, String lastName, String username, String phoneNumber, UserStatus status, ProfilePhoto profilePhoto, LinkState outgoingLink, LinkState incomingLink, boolean isVerified, String restrictionReason, boolean haveAccess, UserType type, String languageCode) {
+        public User(int id, String firstName, String lastName, String username, String phoneNumber, UserStatus status, ProfilePhoto profilePhoto, LinkState outgoingLink, LinkState incomingLink, boolean isVerified, boolean isSupport, String restrictionReason, boolean haveAccess, UserType type, String languageCode) {
             this.id = id;
             this.firstName = firstName;
             this.lastName = lastName;
@@ -11179,13 +12930,14 @@ public class TdApi {
             this.outgoingLink = outgoingLink;
             this.incomingLink = incomingLink;
             this.isVerified = isVerified;
+            this.isSupport = isSupport;
             this.restrictionReason = restrictionReason;
             this.haveAccess = haveAccess;
             this.type = type;
             this.languageCode = languageCode;
         }
 
-        public static final int CONSTRUCTOR = -732086407;
+        public static final int CONSTRUCTOR = 248614314;
 
         @Override
         public int getConstructor() {
@@ -11258,6 +13010,19 @@ public class TdApi {
         }
 
         public static final int CONSTRUCTOR = -906967291;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class UserPrivacySettingAllowPeerToPeerCalls extends UserPrivacySetting {
+
+        public UserPrivacySettingAllowPeerToPeerCalls() {
+        }
+
+        public static final int CONSTRUCTOR = 352500032;
 
         @Override
         public int getConstructor() {
@@ -11374,19 +13139,41 @@ public class TdApi {
         }
     }
 
+    public static class UserProfilePhoto extends Object {
+        public long id;
+        public int addedDate;
+        public PhotoSize[] sizes;
+
+        public UserProfilePhoto() {
+        }
+
+        public UserProfilePhoto(long id, int addedDate, PhotoSize[] sizes) {
+            this.id = id;
+            this.addedDate = addedDate;
+            this.sizes = sizes;
+        }
+
+        public static final int CONSTRUCTOR = -1882596466;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
     public static class UserProfilePhotos extends Object {
         public int totalCount;
-        public Photo[] photos;
+        public UserProfilePhoto[] photos;
 
         public UserProfilePhotos() {
         }
 
-        public UserProfilePhotos(int totalCount, Photo[] photos) {
+        public UserProfilePhotos(int totalCount, UserProfilePhoto[] photos) {
             this.totalCount = totalCount;
             this.photos = photos;
         }
 
-        public static final int CONSTRUCTOR = 1388892074;
+        public static final int CONSTRUCTOR = 1512709690;
 
         @Override
         public int getConstructor() {
@@ -11764,12 +13551,12 @@ public class TdApi {
         public Video video;
         public VideoNote videoNote;
         public VoiceNote voiceNote;
-        public boolean hasInstantView;
+        public int instantViewVersion;
 
         public WebPage() {
         }
 
-        public WebPage(String url, String displayUrl, String type, String siteName, String title, String description, Photo photo, String embedUrl, String embedType, int embedWidth, int embedHeight, int duration, String author, Animation animation, Audio audio, Document document, Sticker sticker, Video video, VideoNote videoNote, VoiceNote voiceNote, boolean hasInstantView) {
+        public WebPage(String url, String displayUrl, String type, String siteName, String title, String description, Photo photo, String embedUrl, String embedType, int embedWidth, int embedHeight, int duration, String author, Animation animation, Audio audio, Document document, Sticker sticker, Video video, VideoNote videoNote, VoiceNote voiceNote, int instantViewVersion) {
             this.url = url;
             this.displayUrl = displayUrl;
             this.type = type;
@@ -11790,10 +13577,10 @@ public class TdApi {
             this.video = video;
             this.videoNote = videoNote;
             this.voiceNote = voiceNote;
-            this.hasInstantView = hasInstantView;
+            this.instantViewVersion = instantViewVersion;
         }
 
-        public static final int CONSTRUCTOR = 1465949075;
+        public static final int CONSTRUCTOR = 1092898169;
 
         @Override
         public int getConstructor() {
@@ -11803,17 +13590,23 @@ public class TdApi {
 
     public static class WebPageInstantView extends Object {
         public PageBlock[] pageBlocks;
+        public int version;
+        public String url;
+        public boolean isRtl;
         public boolean isFull;
 
         public WebPageInstantView() {
         }
 
-        public WebPageInstantView(PageBlock[] pageBlocks, boolean isFull) {
+        public WebPageInstantView(PageBlock[] pageBlocks, int version, String url, boolean isRtl, boolean isFull) {
             this.pageBlocks = pageBlocks;
+            this.version = version;
+            this.url = url;
+            this.isRtl = isRtl;
             this.isFull = isFull;
         }
 
-        public static final int CONSTRUCTOR = 1804324850;
+        public static final int CONSTRUCTOR = 957287214;
 
         @Override
         public int getConstructor() {
@@ -11901,6 +13694,24 @@ public class TdApi {
         }
     }
 
+    public static class AddCustomServerLanguagePack extends Function {
+        public String languagePackId;
+
+        public AddCustomServerLanguagePack() {
+        }
+
+        public AddCustomServerLanguagePack(String languagePackId) {
+            this.languagePackId = languagePackId;
+        }
+
+        public static final int CONSTRUCTOR = 4492771;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
     public static class AddFavoriteSticker extends Function {
         public InputFile sticker;
 
@@ -11938,6 +13749,26 @@ public class TdApi {
         }
 
         public static final int CONSTRUCTOR = -348943149;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class AddLogMessage extends Function {
+        public int verbosityLevel;
+        public String text;
+
+        public AddLogMessage() {
+        }
+
+        public AddLogMessage(int verbosityLevel, String text) {
+            this.verbosityLevel = verbosityLevel;
+            this.text = text;
+        }
+
+        public static final int CONSTRUCTOR = 1597427692;
 
         @Override
         public int getConstructor() {
@@ -12427,7 +14258,7 @@ public class TdApi {
             this.username = username;
         }
 
-        public static final int CONSTRUCTOR = -2003506154;
+        public static final int CONSTRUCTOR = -119119344;
 
         @Override
         public int getConstructor() {
@@ -12500,6 +14331,24 @@ public class TdApi {
         }
 
         public static final int CONSTRUCTOR = 1497462718;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class CheckRecoveryEmailAddressCode extends Function {
+        public String code;
+
+        public CheckRecoveryEmailAddressCode() {
+        }
+
+        public CheckRecoveryEmailAddressCode(String code) {
+            this.code = code;
+        }
+
+        public static final int CONSTRUCTOR = -1997039589;
 
         @Override
         public int getConstructor() {
@@ -12861,16 +14710,18 @@ public class TdApi {
     public static class DeleteChatHistory extends Function {
         public long chatId;
         public boolean removeFromChatList;
+        public boolean revoke;
 
         public DeleteChatHistory() {
         }
 
-        public DeleteChatHistory(long chatId, boolean removeFromChatList) {
+        public DeleteChatHistory(long chatId, boolean removeFromChatList, boolean revoke) {
             this.chatId = chatId;
             this.removeFromChatList = removeFromChatList;
+            this.revoke = revoke;
         }
 
-        public static final int CONSTRUCTOR = -1384632722;
+        public static final int CONSTRUCTOR = -1472081761;
 
         @Override
         public int getConstructor() {
@@ -13140,16 +14991,22 @@ public class TdApi {
     public static class DownloadFile extends Function {
         public int fileId;
         public int priority;
+        public int offset;
+        public int limit;
+        public boolean synchronous;
 
         public DownloadFile() {
         }
 
-        public DownloadFile(int fileId, int priority) {
+        public DownloadFile(int fileId, int priority, int offset, int limit, boolean synchronous) {
             this.fileId = fileId;
             this.priority = priority;
+            this.offset = offset;
+            this.limit = limit;
+            this.synchronous = synchronous;
         }
 
-        public static final int CONSTRUCTOR = 1531851978;
+        public static final int CONSTRUCTOR = -1102026662;
 
         @Override
         public int getConstructor() {
@@ -13568,6 +15425,19 @@ public class TdApi {
         }
     }
 
+    public static class GetApplicationConfig extends Function {
+
+        public GetApplicationConfig() {
+        }
+
+        public static final int CONSTRUCTOR = -1823144318;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
     public static class GetArchivedStickerSets extends Function {
         public boolean isMasks;
         public long offsetStickerSetId;
@@ -13851,6 +15721,26 @@ public class TdApi {
         }
     }
 
+    public static class GetChatNotificationSettingsExceptions extends Function {
+        public NotificationSettingsScope scope;
+        public boolean compareSound;
+
+        public GetChatNotificationSettingsExceptions() {
+        }
+
+        public GetChatNotificationSettingsExceptions(NotificationSettingsScope scope, boolean compareSound) {
+            this.scope = scope;
+            this.compareSound = compareSound;
+        }
+
+        public static final int CONSTRUCTOR = 201199121;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
     public static class GetChatPinnedMessage extends Function {
         public long chatId;
 
@@ -13880,6 +15770,28 @@ public class TdApi {
         }
 
         public static final int CONSTRUCTOR = -748866856;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class GetChatStatisticsUrl extends Function {
+        public long chatId;
+        public String parameters;
+        public boolean isDark;
+
+        public GetChatStatisticsUrl() {
+        }
+
+        public GetChatStatisticsUrl(long chatId, String parameters, boolean isDark) {
+            this.chatId = chatId;
+            this.parameters = parameters;
+            this.isDark = isDark;
+        }
+
+        public static final int CONSTRUCTOR = 1114621183;
 
         @Override
         public int getConstructor() {
@@ -13961,6 +15873,32 @@ public class TdApi {
         }
     }
 
+    public static class GetCurrentState extends Function {
+
+        public GetCurrentState() {
+        }
+
+        public static final int CONSTRUCTOR = -1191417719;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class GetDatabaseStatistics extends Function {
+
+        public GetDatabaseStatistics() {
+        }
+
+        public static final int CONSTRUCTOR = -1942760263;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
     public static class GetDeepLinkInfo extends Function {
         public String link;
 
@@ -14003,6 +15941,26 @@ public class TdApi {
         }
 
         public static final int CONSTRUCTOR = 1553923406;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class GetFileDownloadedPrefixSize extends Function {
+        public int fileId;
+        public int offset;
+
+        public GetFileDownloadedPrefixSize() {
+        }
+
+        public GetFileDownloadedPrefixSize(int fileId, int offset) {
+            this.fileId = fileId;
+            this.offset = offset;
+        }
+
+        public static final int CONSTRUCTOR = -1668864864;
 
         @Override
         public int getConstructor() {
@@ -14180,6 +16138,60 @@ public class TdApi {
         }
     }
 
+    public static class GetJsonString extends Function {
+        public JsonValue jsonValue;
+
+        public GetJsonString() {
+        }
+
+        public GetJsonString(JsonValue jsonValue) {
+            this.jsonValue = jsonValue;
+        }
+
+        public static final int CONSTRUCTOR = 663458849;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class GetJsonValue extends Function {
+        public String json;
+
+        public GetJsonValue() {
+        }
+
+        public GetJsonValue(String json) {
+            this.json = json;
+        }
+
+        public static final int CONSTRUCTOR = -1829086715;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class GetLanguagePackInfo extends Function {
+        public String languagePackId;
+
+        public GetLanguagePackInfo() {
+        }
+
+        public GetLanguagePackInfo(String languagePackId) {
+            this.languagePackId = languagePackId;
+        }
+
+        public static final int CONSTRUCTOR = 2077809320;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
     public static class GetLanguagePackString extends Function {
         public String languagePackDatabasePath;
         public String localizationTarget;
@@ -14235,6 +16247,63 @@ public class TdApi {
         }
 
         public static final int CONSTRUCTOR = 1849499526;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class GetLogStream extends Function {
+
+        public GetLogStream() {
+        }
+
+        public static final int CONSTRUCTOR = 1167608667;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class GetLogTagVerbosityLevel extends Function {
+        public String tag;
+
+        public GetLogTagVerbosityLevel() {
+        }
+
+        public GetLogTagVerbosityLevel(String tag) {
+            this.tag = tag;
+        }
+
+        public static final int CONSTRUCTOR = 951004547;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class GetLogTags extends Function {
+
+        public GetLogTags() {
+        }
+
+        public static final int CONSTRUCTOR = -254449190;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class GetLogVerbosityLevel extends Function {
+
+        public GetLogVerbosityLevel() {
+        }
+
+        public static final int CONSTRUCTOR = 594057956;
 
         @Override
         public int getConstructor() {
@@ -14303,6 +16372,46 @@ public class TdApi {
         }
     }
 
+    public static class GetMessageLink extends Function {
+        public long chatId;
+        public long messageId;
+
+        public GetMessageLink() {
+        }
+
+        public GetMessageLink(long chatId, long messageId) {
+            this.chatId = chatId;
+            this.messageId = messageId;
+        }
+
+        public static final int CONSTRUCTOR = 1362732326;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class GetMessageLocally extends Function {
+        public long chatId;
+        public long messageId;
+
+        public GetMessageLocally() {
+        }
+
+        public GetMessageLocally(long chatId, long messageId) {
+            this.chatId = chatId;
+            this.messageId = messageId;
+        }
+
+        public static final int CONSTRUCTOR = -603575444;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
     public static class GetMessages extends Function {
         public long chatId;
         public long[] messageIds;
@@ -14364,20 +16473,38 @@ public class TdApi {
         public String scope;
         public String publicKey;
         public String nonce;
-        public String password;
 
         public GetPassportAuthorizationForm() {
         }
 
-        public GetPassportAuthorizationForm(int botUserId, String scope, String publicKey, String nonce, String password) {
+        public GetPassportAuthorizationForm(int botUserId, String scope, String publicKey, String nonce) {
             this.botUserId = botUserId;
             this.scope = scope;
             this.publicKey = publicKey;
             this.nonce = nonce;
+        }
+
+        public static final int CONSTRUCTOR = -1468394095;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class GetPassportAuthorizationFormAvailableElements extends Function {
+        public int autorizationFormId;
+        public String password;
+
+        public GetPassportAuthorizationFormAvailableElements() {
+        }
+
+        public GetPassportAuthorizationFormAvailableElements(int autorizationFormId, String password) {
+            this.autorizationFormId = autorizationFormId;
             this.password = password;
         }
 
-        public static final int CONSTRUCTOR = 1998294216;
+        public static final int CONSTRUCTOR = 1738134754;
 
         @Override
         public int getConstructor() {
@@ -14522,6 +16649,24 @@ public class TdApi {
         }
 
         public static final int CONSTRUCTOR = -374642839;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class GetPushReceiverId extends Function {
+        public String payload;
+
+        public GetPushReceiverId() {
+        }
+
+        public GetPushReceiverId(String payload) {
+            this.payload = payload;
+        }
+
+        public static final int CONSTRUCTOR = -286505294;
 
         @Override
         public int getConstructor() {
@@ -15224,21 +17369,21 @@ public class TdApi {
         }
     }
 
-    public static class PinSupergroupMessage extends Function {
-        public int supergroupId;
+    public static class PinChatMessage extends Function {
+        public long chatId;
         public long messageId;
         public boolean disableNotification;
 
-        public PinSupergroupMessage() {
+        public PinChatMessage() {
         }
 
-        public PinSupergroupMessage(int supergroupId, long messageId, boolean disableNotification) {
-            this.supergroupId = supergroupId;
+        public PinChatMessage(long chatId, long messageId, boolean disableNotification) {
+            this.chatId = chatId;
             this.messageId = messageId;
             this.disableNotification = disableNotification;
         }
 
-        public static final int CONSTRUCTOR = 1141187557;
+        public static final int CONSTRUCTOR = -554712351;
 
         @Override
         public int getConstructor() {
@@ -15264,19 +17409,17 @@ public class TdApi {
         }
     }
 
-    public static class ProcessDcUpdate extends Function {
-        public String dc;
-        public String addr;
+    public static class ProcessPushNotification extends Function {
+        public String payload;
 
-        public ProcessDcUpdate() {
+        public ProcessPushNotification() {
         }
 
-        public ProcessDcUpdate(String dc, String addr) {
-            this.dc = dc;
-            this.addr = addr;
+        public ProcessPushNotification(String payload) {
+            this.payload = payload;
         }
 
-        public static final int CONSTRUCTOR = -1806562997;
+        public static final int CONSTRUCTOR = 786679952;
 
         @Override
         public int getConstructor() {
@@ -15295,6 +17438,28 @@ public class TdApi {
         }
 
         public static final int CONSTRUCTOR = 1357558453;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class ReadFilePart extends Function {
+        public int fileId;
+        public int offset;
+        public int count;
+
+        public ReadFilePart() {
+        }
+
+        public ReadFilePart(int fileId, int offset, int count) {
+            this.fileId = fileId;
+            this.offset = offset;
+            this.count = count;
+        }
+
+        public static final int CONSTRUCTOR = -407749314;
 
         @Override
         public int getConstructor() {
@@ -15350,7 +17515,7 @@ public class TdApi {
             this.otherUserIds = otherUserIds;
         }
 
-        public static final int CONSTRUCTOR = -413637293;
+        public static final int CONSTRUCTOR = 1734127493;
 
         @Override
         public int getConstructor() {
@@ -15387,6 +17552,46 @@ public class TdApi {
         }
 
         public static final int CONSTRUCTOR = 1152945264;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class RemoveNotification extends Function {
+        public int notificationGroupId;
+        public int notificationId;
+
+        public RemoveNotification() {
+        }
+
+        public RemoveNotification(int notificationGroupId, int notificationId) {
+            this.notificationGroupId = notificationGroupId;
+            this.notificationId = notificationId;
+        }
+
+        public static final int CONSTRUCTOR = 862630734;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class RemoveNotificationGroup extends Function {
+        public int notificationGroupId;
+        public int maxNotificationId;
+
+        public RemoveNotificationGroup() {
+        }
+
+        public RemoveNotificationGroup(int notificationGroupId, int maxNotificationId) {
+            this.notificationGroupId = notificationGroupId;
+            this.maxNotificationId = maxNotificationId;
+        }
+
+        public static final int CONSTRUCTOR = 1713005454;
 
         @Override
         public int getConstructor() {
@@ -15679,6 +17884,19 @@ public class TdApi {
         }
     }
 
+    public static class ResendRecoveryEmailAddressCode extends Function {
+
+        public ResendRecoveryEmailAddressCode() {
+        }
+
+        public static final int CONSTRUCTOR = 433483548;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
     public static class ResetAllNotificationSettings extends Function {
 
         public ResetAllNotificationSettings() {
@@ -15698,6 +17916,28 @@ public class TdApi {
         }
 
         public static final int CONSTRUCTOR = 1646452102;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class SaveApplicationLogEvent extends Function {
+        public String type;
+        public long chatId;
+        public JsonValue data;
+
+        public SaveApplicationLogEvent() {
+        }
+
+        public SaveApplicationLogEvent(String type, long chatId, JsonValue data) {
+            this.type = type;
+            this.chatId = chatId;
+            this.data = data;
+        }
+
+        public static final int CONSTRUCTOR = -811154930;
 
         @Override
         public int getConstructor() {
@@ -16214,20 +18454,22 @@ public class TdApi {
         public boolean fromBackground;
         public long queryId;
         public String resultId;
+        public boolean hideViaBot;
 
         public SendInlineQueryResultMessage() {
         }
 
-        public SendInlineQueryResultMessage(long chatId, long replyToMessageId, boolean disableNotification, boolean fromBackground, long queryId, String resultId) {
+        public SendInlineQueryResultMessage(long chatId, long replyToMessageId, boolean disableNotification, boolean fromBackground, long queryId, String resultId, boolean hideViaBot) {
             this.chatId = chatId;
             this.replyToMessageId = replyToMessageId;
             this.disableNotification = disableNotification;
             this.fromBackground = fromBackground;
             this.queryId = queryId;
             this.resultId = resultId;
+            this.hideViaBot = hideViaBot;
         }
 
-        public static final int CONSTRUCTOR = -643910868;
+        public static final int CONSTRUCTOR = 893888200;
 
         @Override
         public int getConstructor() {
@@ -16733,6 +18975,62 @@ public class TdApi {
         }
     }
 
+    public static class SetLogStream extends Function {
+        public LogStream logStream;
+
+        public SetLogStream() {
+        }
+
+        public SetLogStream(LogStream logStream) {
+            this.logStream = logStream;
+        }
+
+        public static final int CONSTRUCTOR = -1364199535;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class SetLogTagVerbosityLevel extends Function {
+        public String tag;
+        public int newVerbosityLevel;
+
+        public SetLogTagVerbosityLevel() {
+        }
+
+        public SetLogTagVerbosityLevel(String tag, int newVerbosityLevel) {
+            this.tag = tag;
+            this.newVerbosityLevel = newVerbosityLevel;
+        }
+
+        public static final int CONSTRUCTOR = -2095589738;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class SetLogVerbosityLevel extends Function {
+        public int newVerbosityLevel;
+
+        public SetLogVerbosityLevel() {
+        }
+
+        public SetLogVerbosityLevel(int newVerbosityLevel) {
+            this.newVerbosityLevel = newVerbosityLevel;
+        }
+
+        public static final int CONSTRUCTOR = -303429678;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
     public static class SetName extends Function {
         public String firstName;
         public String lastName;
@@ -16868,6 +19166,28 @@ public class TdApi {
         }
 
         public static final int CONSTRUCTOR = -1369665719;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class SetPollAnswer extends Function {
+        public long chatId;
+        public long messageId;
+        public int[] optionIds;
+
+        public SetPollAnswer() {
+        }
+
+        public SetPollAnswer(long chatId, long messageId, int[] optionIds) {
+            this.chatId = chatId;
+            this.messageId = messageId;
+            this.optionIds = optionIds;
+        }
+
+        public static final int CONSTRUCTOR = -1399388792;
 
         @Override
         public int getConstructor() {
@@ -17062,6 +19382,46 @@ public class TdApi {
         }
 
         public static final int CONSTRUCTOR = 439901214;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class StopPoll extends Function {
+        public long chatId;
+        public long messageId;
+        public ReplyMarkup replyMarkup;
+
+        public StopPoll() {
+        }
+
+        public StopPoll(long chatId, long messageId, ReplyMarkup replyMarkup) {
+            this.chatId = chatId;
+            this.messageId = messageId;
+            this.replyMarkup = replyMarkup;
+        }
+
+        public static final int CONSTRUCTOR = 1659374253;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class SynchronizeLanguagePack extends Function {
+        public String languagePackId;
+
+        public SynchronizeLanguagePack() {
+        }
+
+        public SynchronizeLanguagePack(String languagePackId) {
+            this.languagePackId = languagePackId;
+        }
+
+        public static final int CONSTRUCTOR = -2065307858;
 
         @Override
         public int getConstructor() {
@@ -17449,17 +19809,17 @@ public class TdApi {
         }
     }
 
-    public static class UnpinSupergroupMessage extends Function {
-        public int supergroupId;
+    public static class UnpinChatMessage extends Function {
+        public long chatId;
 
-        public UnpinSupergroupMessage() {
+        public UnpinChatMessage() {
         }
 
-        public UnpinSupergroupMessage(int supergroupId) {
-            this.supergroupId = supergroupId;
+        public UnpinChatMessage(long chatId) {
+            this.chatId = chatId;
         }
 
-        public static final int CONSTRUCTOR = -1987029530;
+        public static final int CONSTRUCTOR = 277557690;
 
         @Override
         public int getConstructor() {
@@ -17584,6 +19944,28 @@ public class TdApi {
         }
 
         public static final int CONSTRUCTOR = -952416520;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class WriteGeneratedFilePart extends Function {
+        public long generationId;
+        public int offset;
+        public byte[] data;
+
+        public WriteGeneratedFilePart() {
+        }
+
+        public WriteGeneratedFilePart(long generationId, int offset, byte[] data) {
+            this.generationId = generationId;
+            this.offset = offset;
+            this.data = data;
+        }
+
+        public static final int CONSTRUCTOR = -2062358189;
 
         @Override
         public int getConstructor() {

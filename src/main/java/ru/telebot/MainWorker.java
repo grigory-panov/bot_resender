@@ -1,6 +1,7 @@
 package ru.telebot;
 
-import org.drinkless.tdlib.Log;
+import org.drinkless.tdlib.Client;
+import org.drinkless.tdlib.TdApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,14 +23,16 @@ public class MainWorker {
     public static void main(String[] args) throws Exception {
         try {
             Config.init();
-            Log.setVerbosityLevel(Config.getIntValue("tdlib.log_level"));
-            if (!Log.setFilePath(Config.getValue("tdlib.log_file"))) {
-                throw new IOError(new IOException("Write access to the directory " + Config.getValue("tdlib.log_file") + "is required"));
+            Client.execute(new TdApi.SetLogVerbosityLevel(Config.getIntValue("tdlib.log_level")));
+
+            if (Client.execute(new TdApi.SetLogStream(new TdApi.LogStreamFile(Config.getValue("tdlib.log_file"), 100000000L))) instanceof TdApi.Error) {
+                throw new IOError(new IOException("Write access to the file " + Config.getValue("tdlib.log_file") + " is required"));
             }
             Bot obj = null;
             try {
                 obj = new Bot();
             }catch(BotException ex){
+                logger.error(ex.getMessage(), ex);
                 throw ex;
             }
             Thread bot = new Thread(obj);
@@ -38,6 +41,7 @@ public class MainWorker {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException ex) {
+                    obj.close();
                     bot.interrupt();
                     Thread.sleep(100);
                     throw ex;
