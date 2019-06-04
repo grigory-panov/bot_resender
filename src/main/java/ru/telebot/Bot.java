@@ -176,7 +176,7 @@ public class Bot implements Runnable, AutoCloseable {
                         inputMessageContent = new TdApi.InputMessageText(formattedText, false, true);
                     } else if(message.message.content instanceof TdApi.MessagePhoto){
                         TdApi.MessagePhoto messagePhoto = (TdApi.MessagePhoto) message.message.content;
-                        String text = chat.getName().substring(0, chat.getName().indexOf("->")) + "\n";
+                        String text = "Forwarded from " + chat.getName().substring(0, chat.getName().indexOf("->")) + " : " + message.message.date +" \n";
                         TdApi.TextEntity[] entity = shiftEntity(messagePhoto.caption.entities, text.length());
                         TdApi.FormattedText formattedText = new TdApi.FormattedText(text + messagePhoto.caption.text, entity);
                         inputMessageContent = new TdApi.InputMessagePhoto(new TdApi.InputFileRemote(messagePhoto.photo.sizes[0].photo.remote.id), null, null, 0, 0, formattedText, 0);
@@ -256,7 +256,7 @@ public class Bot implements Runnable, AutoCloseable {
                     logger.error(ex.getMessage(), ex);
                 }
                 if(session != null) {
-                    replyToUser(session.getBotChatId(), "Please enter confirm code + any random character");
+                    replyToUser(session.getClientId(), "Please enter confirm code + any random character");
                 }
 
                 logger.debug("waiting code to confirm auth for " + phone);
@@ -291,7 +291,7 @@ public class Bot implements Runnable, AutoCloseable {
                     logger.error(ex.getMessage(), ex);
                 }
                 if(session != null) {
-                    replyToUser(session.getBotChatId(), "Please enter password");
+                    replyToUser(session.getClientId(), "Please enter password");
                 }
 
 
@@ -324,9 +324,6 @@ public class Bot implements Runnable, AutoCloseable {
                         session.setFirstParam("");
                         session.setCurrentAction("");
                         DbHelper.save(dataSource, session);
-                        if(session.getBotChatId() == null) {
-                            logger.error("empty bot chat id"); // todo it is possible if user say bot not his own phone
-                        }
                     } catch (SQLException ex) {
                         logger.info("Cannot save session for " + phone, ex);
                     }
@@ -442,15 +439,13 @@ public class Bot implements Runnable, AutoCloseable {
                 logger.error(e.getMessage(), e);
             }
         } else {
-            logger.debug("this is my message, skip");
+            logger.debug("this is BOT message, skip");
         }
     }
 
     private static void replyToUser(TdApi.UpdateNewMessage userMessage) throws SQLException {
 
         Session session = DbHelper.getSessionByClientId(dataSource, userMessage.message.senderUserId);
-        session.setBotChatId(userMessage.message.chatId);
-
         switch (userMessage.message.content.getConstructor()) {
             case TdApi.MessageText.CONSTRUCTOR:
                 TdApi.MessageText mess = (TdApi.MessageText) userMessage.message.content;
@@ -538,14 +533,14 @@ public class Bot implements Runnable, AutoCloseable {
                     } else {
                         replyToUser(userMessage.message.chatId, "Not authorized");
                     }
-                } else if ("/list_destinations".equals(command) && BOT_OWNER.equals(session.getPhone())) {
+                } else if ("/list_destination".equals(command) && BOT_OWNER.equals(session.getPhone())) {
 
                     if (session.getAuthState() == State.AUTHORIZED) {
 
                         List<Chat> destinations = DbHelper.getPossibleDestinations(dataSource);
-                        if(destinations.isEmpty()){
+                        if (destinations.isEmpty()) {
                             replyToUser(userMessage.message.chatId, "No destinations, use /create_destination");
-                        }else {
+                        } else {
                             StringBuilder sb = new StringBuilder();
                             destinations.forEach(chat -> sb.append(chat).append('\n'));
                             replyToUser(userMessage.message.chatId, sb.toString());
@@ -554,15 +549,46 @@ public class Bot implements Runnable, AutoCloseable {
                     } else {
                         replyToUser(userMessage.message.chatId, "Not authorized");
                     }
+                } else if ("/list_user".equals(command) && BOT_OWNER.equals(session.getPhone())) {
+                    if (session.getAuthState() == State.AUTHORIZED) {
+                        List<String> users = DbHelper.getUsers(dataSource);
+                        if(users.isEmpty()){
+                            replyToUser(userMessage.message.chatId, "No bot users, use /create_user");
+                        }else {
+                            StringBuilder sb = new StringBuilder();
+                            users.forEach(user -> sb.append(user).append('\n'));
+                            replyToUser(userMessage.message.chatId, sb.toString());
+                        }
+                    }
+
+                } else if ("/create_user".equals(command) && BOT_OWNER.equals(session.getPhone())) {
+                    if (session.getAuthState() == State.AUTHORIZED) {
+                        replyToUser(userMessage.message.chatId, "Input user phone to create");
+                        session.setCurrentAction("create_user");
+                        DbHelper.save(dataSource, session);
+                    }
+
+                } else if ("/delete_user".equals(command) && BOT_OWNER.equals(session.getPhone())) {
+                    if (session.getAuthState() == State.AUTHORIZED) {
+                        replyToUser(userMessage.message.chatId, "Input user phone to delete");
+                        session.setCurrentAction("delete_user");
+                        DbHelper.save(dataSource, session);
+                    }
+
                 } else { // handle text
 
                     if ("login".equals(session.getCurrentAction())) {
-                        logger.debug("handle login phone" + mess.text.text);
-                        session.setPhone(mess.text.text);
-                        session.setAuthState(State.CONFIRM_AUTH);
-                        session.setCurrentAction("");
-                        DbHelper.save(dataSource, session);
-                        createClient(mess.text.text);
+
+                        logger.debug("handle login phone " + mess.text.text);
+                        if(DbHelper.isPhoneAllowed(dataSource, mess.text.text)) {
+                            session.setPhone(mess.text.text);
+                            session.setAuthState(State.CONFIRM_AUTH);
+                            session.setCurrentAction("");
+                            DbHelper.save(dataSource, session);
+                            createClient(mess.text.text);
+                        }else{
+                            logger.debug("phone not allowed");
+                        }
                     } else if ("auth_code".equals(session.getCurrentAction())) {
                         logger.debug("handle " + session.getCurrentAction());
                         codeStorage.put(session.getPhone(), new ExpiryEntity(mess.text.text.substring(0, 5), LocalDateTime.now().plusMinutes(5)));
@@ -617,7 +643,7 @@ public class Bot implements Runnable, AutoCloseable {
                         try {
                             Long sourceId = Long.parseLong(mess.text.text.substring(0, mess.text.text.indexOf(' ')));
                             Long destinationId = Long.parseLong(mess.text.text.substring(mess.text.text.indexOf(' ') + 1));
-                            int rowsCount = DbHelper.deletelink(dataSource, session.getPhone(), sourceId, destinationId);
+                            int rowsCount = DbHelper.deleteLink(dataSource, session.getPhone(), sourceId, destinationId);
                             if(rowsCount == 1){
                                 replyToUser(userMessage.message.chatId, "Link deleted");
                             }else{
@@ -664,6 +690,27 @@ public class Bot implements Runnable, AutoCloseable {
                         }catch (NumberFormatException ex){
                             replyToUser(userMessage.message.chatId, "Input destination chatId to delete");
                         }
+                    } else if ("create_user".equals(session.getCurrentAction()) && BOT_OWNER.equals(session.getPhone())) {
+
+                        session.setCurrentAction("");
+                        DbHelper.save(dataSource, session);
+                        try {
+                            DbHelper.createUser(dataSource, mess.text.text);
+                            replyToUser(userMessage.message.chatId, "User created");
+                        }catch (SQLException ex){
+                            replyToUser(userMessage.message.chatId, "User not created");
+                        }
+
+                    } else if ("delete_user".equals(session.getCurrentAction()) && BOT_OWNER.equals(session.getPhone())) {
+                        session.setCurrentAction("");
+                        DbHelper.save(dataSource, session);
+                        int rows = DbHelper.deleteUser(dataSource, mess.text.text);
+                        if(rows == 1) {
+                            replyToUser(userMessage.message.chatId, "Deleted");
+                        }else{
+                            replyToUser(userMessage.message.chatId, "Not found");
+                        }
+
                     } else {
                         logger.debug("unrecognized command " + mess.text.text);
                         replyToUser(userMessage.message.chatId, "Use /list /create or /delete command");

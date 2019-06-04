@@ -4,8 +4,7 @@ public class Session {
     private String phone;
     private State authState;
     private String currentAction;
-    private Long botChatId;
-    private Integer clientId;
+    private Long clientId;
     private String firstParam;
 
     public Session() {
@@ -40,14 +39,6 @@ public class Session {
         this.currentAction = currentAction;
     }
 
-    public Long getBotChatId() {
-        return botChatId;
-    }
-
-    public void setBotChatId(Long botChatId) {
-        this.botChatId = botChatId;
-    }
-
     public String getFirstParam() {
         return firstParam;
     }
@@ -56,11 +47,11 @@ public class Session {
         this.firstParam = firstParam;
     }
 
-    public Integer getClientId() {
+    public Long getClientId() {
         return clientId;
     }
 
-    public void setClientId(Integer clientId) {
+    public void setClientId(Long clientId) {
         this.clientId = clientId;
     }
 
@@ -70,7 +61,6 @@ public class Session {
                 "phone='" + phone + '\'' +
                 ", authState=" + authState +
                 ", currentAction='" + currentAction + '\'' +
-                ", botChatId=" + botChatId +
                 ", clientId=" + clientId +
                 ", firstParam='" + firstParam + '\'' +
                 '}';

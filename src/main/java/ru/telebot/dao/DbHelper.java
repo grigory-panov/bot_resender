@@ -44,8 +44,7 @@ public class DbHelper {
         session.setPhone(resultSet.getString("phone"));
         session.setAuthState(Enum.valueOf(State.class, resultSet.getString("auth_state")));
         session.setCurrentAction(resultSet.getString("current_action"));
-        session.setBotChatId(resultSet.getLong("bot_chat_id"));
-        session.setClientId(resultSet.getInt("client_id"));
+        session.setClientId(resultSet.getLong("client_id"));
         session.setFirstParam(resultSet.getString("first_param"));
         return session;
     }
@@ -131,14 +130,14 @@ public class DbHelper {
         }
     }
 
-    public static Session getSessionByClientId(DataSource ds, int clientId) throws SQLException  {
+    public static Session getSessionByClientId(DataSource ds, long clientId) throws SQLException  {
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement("select * from user_session where client_id = ?")) {
-                ps.setInt(1, clientId);
+                ps.setLong(1, clientId);
                 ResultSet resultSet = ps.executeQuery();
                 Session session = new Session();
-                session.setClientId(clientId);
                 session.setAuthState(State.LOGIN);
+                session.setClientId(clientId);
                 if(resultSet.next()){
                     session = mapSession(resultSet);
                 }
@@ -153,7 +152,7 @@ public class DbHelper {
         try (Connection connection = ds.getConnection()) {
 
             try (PreparedStatement ps = connection.prepareStatement("select * from user_session where client_id = ?")) {
-                ps.setInt(1, session.getClientId());
+                ps.setLong(1, session.getClientId());
                 ResultSet resultSet = ps.executeQuery();
 
                 if(resultSet.next()){
@@ -162,26 +161,23 @@ public class DbHelper {
                             "phone = ?, " +
                             "auth_state = ?, " +
                             "current_action = ?, " +
-                            "bot_chat_id = ? , " +
                             "first_param = ? " +
                             "where  client_id = ?")){
                         ps2.setString(1, session.getPhone());
                         ps2.setString(2, session.getAuthState().toString());
                         ps2.setString(3, session.getCurrentAction());
-                        ps2.setLong(4, session.getBotChatId());
-                        ps2.setString(5, session.getFirstParam());
-                        ps2.setInt(6, session.getClientId());
+                        ps2.setString(4, session.getFirstParam());
+                        ps2.setLong(5, session.getClientId());
                         ps2.executeUpdate();
                     }
                 }else{
-                    try(PreparedStatement ps2 = connection.prepareStatement("insert into user_session (phone, auth_state, current_action, bot_chat_id, first_param, client_id) " +
-                            "values (? ,? ,? ,? ,? ,? )")){
+                    try(PreparedStatement ps2 = connection.prepareStatement("insert into user_session (phone, auth_state, current_action, first_param, client_id) " +
+                            "values (? ,? ,? ,? ,? )")){
                         ps2.setString(1, session.getPhone());
                         ps2.setString(2, session.getAuthState().toString());
                         ps2.setString(3, session.getCurrentAction());
-                        ps2.setLong(4, session.getBotChatId());
-                        ps2.setString(5, session.getFirstParam());
-                        ps2.setInt(6, session.getClientId());
+                        ps2.setString(4, session.getFirstParam());
+                        ps2.setLong(5, session.getClientId());
                         ps2.executeUpdate();
                     }
                 }
@@ -264,7 +260,7 @@ public class DbHelper {
 
     }
 
-    public static int deletelink(DataSource ds, String phone, Long source, Long destination) throws SQLException {
+    public static int deleteLink(DataSource ds, String phone, Long source, Long destination) throws SQLException {
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement("delete from user_chat where owner=? and chat_id_from=? and chat_id_to = ?")) {
                 ps.setString(1, phone);
@@ -319,5 +315,58 @@ public class DbHelper {
             }
         }
         return chat;
+    }
+
+    public static void createUser(DataSource ds, String phone) throws SQLException {
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("insert into user (phone) values (?)")) {
+                ps.setString(1, phone);
+                ps.executeUpdate();
+                connection.commit();
+            }
+        }
+    }
+
+    public static boolean isPhoneAllowed(DataSource ds, String phone) throws SQLException {
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("select * from user where phone = ?")) {
+                ps.setString(1, phone);
+                ResultSet resultSet = ps.executeQuery();
+                boolean result = false;
+                if (resultSet.next()){
+                    result = true;
+                }
+                connection.commit();
+                return result;
+            }
+        }
+    }
+    public static int deleteUser(DataSource ds, String phone) throws SQLException {
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("delete from user where phone=?")) {
+                ps.setString(1, phone);
+                int res = ps.executeUpdate();
+                connection.commit();
+                return res;
+            }
+        }
+
+    }
+    public static List<String> getUsers(DataSource ds) throws SQLException {
+
+        List<String> result = new ArrayList<>();
+
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("select * from user")) {
+                ResultSet resultSet = ps.executeQuery();
+
+                while (resultSet.next()){
+                    result.add(resultSet.getString("phone"));
+                }
+                resultSet.close();
+                connection.commit();
+            }
+        }
+        return result;
     }
 }
