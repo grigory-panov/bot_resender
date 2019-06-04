@@ -1,18 +1,39 @@
 # bot_resender
 Telegram bot for resend messages from private channels to different channels.
 
-How to use
+## How to use
 
 - start converation with @resender1_bot
-- /login xxxxxxxxxxxx
-- /auth xxxxx_plus_any_random_digits if you send code as is, telegram invalidate it
+- **/login**
+- your phone number
+- auth code from telegram + any random digit at the end, for example, Telegram code 12345 you should send 123450
 
-next parts is not implemented yet
-- /create 
-- /list
-- /delete
-- /create_destination ( admin only )
+After login you can create links.
 
+### create new link
+- **/create**
+- forward message from source channel
+- id of predefined destination channel
+
+### list of configured links for account
+- **/list**
+
+### delete link
+- **/delete**
+- id source channel space id of destination channel
+
+## Admin commands:
+
+### creating destination channel
+- **/create_destination**
+- forward message from destination channel, you should have write permission in that channel
+### list of destinations 
+- **/list_destinations**
+
+### delete configured destination
+
+- **/delete_destination**
+- id of destination channel
 
 # config sample
 
