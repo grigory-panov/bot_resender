@@ -13,27 +13,35 @@ After login you can create links.
 ### create new link
 - **/create**
 - forward message from source channel
-- id of predefined destination channel
-
-### list of configured links for account
-- **/list**
-
+- select from list destination channel
 ### delete link
 - **/delete**
-- id source channel space id of destination channel
+- select from list what you want to delete
+### list of configured links for account
+- **/list**
 
 ## Admin commands:
 
 ### creating destination channel
 - **/create_destination**
 - forward message from destination channel, you should have write permission in that channel
-### list of destinations 
-- **/list_destinations**
-
-### delete configured destination
-
+### delete configured destination channel
 - **/delete_destination**
-- id of destination channel
+- select from list what you want to delete
+### list of destination channels
+- **/list_destination**
+
+
+### creating new bot user
+- **/create_user**
+- phone number of new user, in international format, without leading + and any separators, for example 79091234567
+
+### deleting bot user
+- **/delete_user**
+- phone number of user you want tot delete. If user is logged in, it will be logged out.
+
+### list of users
+- **/list_user**
 
 # config sample
 

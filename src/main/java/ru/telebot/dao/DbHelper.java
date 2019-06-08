@@ -1,8 +1,10 @@
 package ru.telebot.dao;
 
+import com.zaxxer.hikari.HikariDataSource;
 import ru.telebot.domain.Chat;
 import ru.telebot.domain.Session;
 import ru.telebot.domain.State;
+import ru.telebot.domain.User;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -246,6 +248,18 @@ public class DbHelper {
 
     }
 
+    public static int deleteDestinationByName(DataSource ds, String destinationName) throws SQLException {
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("delete from possible_destination where chat_name =?")) {
+                ps.setString(1, destinationName);
+                int res = ps.executeUpdate();
+                connection.commit();
+                return res;
+            }
+        }
+
+    }
+
     public static void createLink(DataSource ds, String phone, Long source, String sourceTitle, Chat destination) throws SQLException {
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement("insert into user_chat (owner, chat_id_from, chat_id_to, chat_name) values (?, ?, ?, ?)")) {
@@ -266,6 +280,19 @@ public class DbHelper {
                 ps.setString(1, phone);
                 ps.setLong(2, source);
                 ps.setLong(3, destination);
+                int res = ps.executeUpdate();
+                connection.commit();
+                return res;
+            }
+        }
+
+    }
+
+    public static int deleteLinkByName(DataSource ds, String phone, String name) throws SQLException {
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("delete from user_chat where owner=? and chat_name=?")) {
+                ps.setString(1, phone);
+                ps.setString(2, name);
                 int res = ps.executeUpdate();
                 connection.commit();
                 return res;
@@ -295,14 +322,14 @@ public class DbHelper {
         return chats;
     }
 
-    public static Chat getDestination(DataSource ds, Long destinationId) throws SQLException {
+    public static Chat getDestination(DataSource ds, String destinationName) throws SQLException {
 
         Chat chat = null;
 
         try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement ps = connection.prepareStatement("select * from possible_destination where chat_id = ?")) {
+            try (PreparedStatement ps = connection.prepareStatement("select * from possible_destination where chat_name = ?")) {
 
-                ps.setLong(1, destinationId);
+                ps.setString(1, destinationName);
                 ResultSet resultSet = ps.executeQuery();
 
                 while (resultSet.next()){
@@ -352,21 +379,36 @@ public class DbHelper {
         }
 
     }
-    public static List<String> getUsers(DataSource ds) throws SQLException {
 
-        List<String> result = new ArrayList<>();
+    public static List<User> getUsers(DataSource ds) throws SQLException {
+
+        List<User> result = new ArrayList<>();
 
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement("select * from user")) {
                 ResultSet resultSet = ps.executeQuery();
 
                 while (resultSet.next()){
-                    result.add(resultSet.getString("phone"));
+                    User user = new User();
+                    user.setPhone(resultSet.getString("phone"));
+                    user.setUserName(resultSet.getString("username"));
+                    result.add(user);
                 }
                 resultSet.close();
                 connection.commit();
             }
         }
         return result;
+    }
+
+    public static void updateUserName(HikariDataSource ds, String phone, String username) throws SQLException {
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("update user set username = ? where phone = ?")) {
+                ps.setString(1, username);
+                ps.setString(2, phone);
+                ps.executeUpdate();
+                connection.commit();
+            }
+        }
     }
 }
