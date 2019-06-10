@@ -333,20 +333,7 @@ public class Bot implements Runnable, AutoCloseable {
                 }
 
                 logger.debug("waiting code to confirm auth for " + phone);
-                Future<String> codeFuture = executor.submit(() -> waitCodeForPhone(phone)); // ждем код 2 мин, он должен поступить через интерфейс бота
-                String code = null;
-                try {
-                    code = codeFuture.get(2, TimeUnit.MINUTES);
-                    openSessions.get(phone).send(new TdApi.CheckAuthenticationCode(code, "", ""), new AuthorizationRequestHandler(clientId));
-                    logger.info("send code " + code + " for auth " + phone);
-                } catch (InterruptedException e) {
-                    logger.error("cannot retrieve auth code for " + phone + ", waiting was interrupted");
-                } catch (ExecutionException e) {
-                    logger.error("cannot retrieve auth code for " + phone, e);
-                } catch (TimeoutException e) {
-                    codeFuture.cancel(true);
-                    logger.error("Timeout. Cannot retrieve auth code for " + phone, e);
-                }
+                executor.submit(() -> waitCodeForPhone(phone, clientId)); // ждем код 3 мин, он должен поступить через интерфейс бота
                 break;
             }
             case TdApi.AuthorizationStateWaitPassword.CONSTRUCTOR: { // сюда заходим если требуется авторизация по паролю
@@ -369,20 +356,7 @@ public class Bot implements Runnable, AutoCloseable {
 
 
                 logger.debug("waiting password to confirm auth for " + phone);
-                Future<String> passFuture = executor.submit(() -> waitPasswordForPhone(phone)); // ждем код 5 мин, он должен поступиьб через интерфейс бота
-                String password = null;
-                try {
-                    password = passFuture.get(2, TimeUnit.MINUTES);
-                    openSessions.get(phone).send(new TdApi.CheckAuthenticationPassword(password), new AuthorizationRequestHandler(clientId));
-                    logger.info("send password *** for " + phone);
-                } catch (InterruptedException e) {
-                    logger.error("cannot retrieve password for " + phone + ", waiting was interrupted");
-                } catch (ExecutionException e) {
-                    logger.error("cannot retrieve password for " + phone, e);
-                } catch (TimeoutException e) {
-                    passFuture.cancel(true);
-                    logger.error("Timeout. Cannot retrieve password for " + phone, e);
-                }
+                executor.submit(() -> waitPasswordForPhone(phone, clientId)); // ждем пароль 3 мин, он должен поступить через интерфейс бота
                 break;
             }
             case TdApi.AuthorizationStateReady.CONSTRUCTOR:
@@ -408,6 +382,12 @@ public class Bot implements Runnable, AutoCloseable {
                 break;
             case TdApi.AuthorizationStateLoggingOut.CONSTRUCTOR:
                 logger.info("Logging out... " + phone);
+                break;
+            case TdApi.AuthorizationStateClosing.CONSTRUCTOR:
+                logger.info("Closing... " + phone);
+                break;
+            case TdApi.AuthorizationStateClosed.CONSTRUCTOR:
+                logger.info("Closed " + phone);
                 Client client = openSessions.remove(phone);
                 if (client != null) {
                     client.close();
@@ -417,17 +397,11 @@ public class Bot implements Runnable, AutoCloseable {
                 } catch (SQLException ex) {
                     logger.error(ex.getMessage(), ex);
                 }
-
-                break;
-            case TdApi.AuthorizationStateClosing.CONSTRUCTOR:
-                logger.info("Closing... " + phone);
-                break;
-            case TdApi.AuthorizationStateClosed.CONSTRUCTOR:
-                logger.info("Closed " + phone);
                 break;
             default:
                 logger.warn("Unsupported authorization state: " + authorizationState);
         }
+
     }
 
     public static void onBotAuthorizationStateUpdated(TdApi.AuthorizationState authorizationState) {
@@ -483,28 +457,47 @@ public class Bot implements Runnable, AutoCloseable {
         }
     }
 
-    // call this only with timeout!
-    private static String waitPasswordForPhone(String phone) throws InterruptedException {
-        while (true) {
+
+    private static void waitPasswordForPhone(String phone, long clientId) {
+        long startTime = System.currentTimeMillis();
+        while (System.currentTimeMillis() - startTime < (3 * 60 * 1000)) {
             if (passwordStorage.containsKey(phone)) {
                 String pass = passwordStorage.get(phone).getValue();
                 passwordStorage.remove(phone);
-                return pass;
+                openSessions.get(phone).send(new TdApi.CheckAuthenticationPassword(pass), new AuthorizationRequestHandler(clientId));
+                logger.info("send password *** for " + phone);
+                return;
             }
-            Thread.sleep(1000);
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                logger.error(e.getMessage(), e);
+                break;
+            }
         }
+        logger.debug("no password received in 3 minutes, give up");
     }
 
-    // call this only with timeout!
-    private static String waitCodeForPhone(String phone) throws InterruptedException {
-        while (true) {
+
+    private static void waitCodeForPhone(String phone, long clientId) {
+        long startTime = System.currentTimeMillis();
+        while (System.currentTimeMillis() - startTime < (3 * 60 * 1000)) {
             if (codeStorage.containsKey(phone)) {
                 String code = codeStorage.get(phone).getValue();
                 codeStorage.remove(phone);
-                return code;
+                openSessions.get(phone).send(new TdApi.CheckAuthenticationCode(code, "", ""), new AuthorizationRequestHandler(clientId));
+                logger.info("send code " + code + " for auth " + phone);
+                return;
             }
-            Thread.sleep(1000);
+
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                logger.error(e.getMessage(), e);
+                break;
+            }
         }
+        logger.debug("no code received in 3 minutes, give up");
     }
 
     public static void onNewBotMessage(TdApi.UpdateNewMessage message) {
