@@ -75,7 +75,7 @@ public class Bot implements Runnable, AutoCloseable {
             logger.debug("sessions count : " + sessions.size());
             sessions.forEach(s -> logger.debug(s.toString()));
 
-            List<Chat> destinations = DbHelper.getPossibleDestinations(dataSource);
+            List<Chat> destinations = DbHelper.getAllPossibleDestinations(dataSource);
             logger.debug("destination count: " + destinations.size());
             destinations.forEach(dest -> logger.debug(dest.toString()));
 
@@ -546,6 +546,13 @@ public class Bot implements Runnable, AutoCloseable {
                     handleCreateUserCommand(session);
                 } else if ("/delete_user".equals(command)) {
                     handleDeleteUserCommand(session);
+                } else if ("/list_permission".equals(command)) {
+                    handleListPermissionCommand(session);
+                } else if ("/create_permission".equals(command)) {
+                    handleCreatePermissionCommand(session);
+                } else if ("/delete_permission".equals(command)) {
+                    handleDeletePermissionCommand(session);
+
                 } else { // handle text
 
                     if ("login".equals(session.getCurrentAction())) {
@@ -570,6 +577,17 @@ public class Bot implements Runnable, AutoCloseable {
                         handleCreateUser(session, mess.text.text);
                     } else if ("delete_user".equals(session.getCurrentAction()) && BOT_OWNER.equals(session.getPhone())) {
                         handleDeleteUser(session, mess.text.text);
+                    } else if ("list_permission".equals(session.getCurrentAction()) && BOT_OWNER.equals(session.getPhone())) {
+                        handleListPermission(session, mess.text.text);
+                    } else if ("select_create_permission".equals(session.getCurrentAction()) && BOT_OWNER.equals(session.getPhone())) {
+                        handleSelectCreatePermission(session, mess.text.text);
+                    } else if ("select_delete_permission".equals(session.getCurrentAction()) && BOT_OWNER.equals(session.getPhone())) {
+                        handleSelectDeletePermission(session, mess.text.text);
+                    } else if ("create_permission".equals(session.getCurrentAction()) && BOT_OWNER.equals(session.getPhone())) {
+                        handleCreatePermission(session, mess.text.text);
+                    } else if ("delete_permission".equals(session.getCurrentAction()) && BOT_OWNER.equals(session.getPhone())) {
+                        handleDeletePermission(session, mess.text.text);
+
                     } else {
                         logger.debug("unrecognized command " + mess.text.text);
                         replyToUser(userMessage.message.chatId, "Use /list /create or /delete command");
@@ -591,6 +609,196 @@ public class Bot implements Runnable, AutoCloseable {
                 break;
         }
 
+    }
+
+    private static void handleDeletePermissionCommand(Session session) throws SQLException {
+        if (session.getAuthState() == State.AUTHORIZED && BOT_OWNER.equals(session.getPhone())) {
+            List<User> users = DbHelper.getUsers(dataSource);
+            if (users.isEmpty()) {
+                replyToUser(session.getClientId(), "No users, try to add some with /create_user");
+                return;
+            }
+            session.setCurrentAction("select_delete_permission");
+            DbHelper.save(dataSource, session);
+            TdApi.KeyboardButton[][] rows = new TdApi.KeyboardButton[users.size()][1];
+            for (int i = 0; i < users.size(); i++) {
+                rows[i][0] = new TdApi.KeyboardButton(users.get(i).toString(), new TdApi.KeyboardButtonTypeText());
+            }
+            TdApi.ReplyMarkupShowKeyboard keyboard = new TdApi.ReplyMarkupShowKeyboard(rows, true, true, true);
+            TdApi.InputMessageContent text = new TdApi.InputMessageText(new TdApi.FormattedText("Select user to revoke permission to destination", null), true, true);
+            bot.send(new TdApi.SendMessage(session.getClientId(), 0, false, false, keyboard, text), object -> {
+                logger.debug("sent " + object.toString());
+            });
+        } else {
+            replyToUser(session.getClientId(), "Not authorized to delete permissions");
+        }
+    }
+
+    private static void handleCreatePermissionCommand(Session session) throws SQLException {
+        if (session.getAuthState() == State.AUTHORIZED && BOT_OWNER.equals(session.getPhone())) {
+            List<User> users = DbHelper.getUsers(dataSource);
+            if (users.isEmpty()) {
+                replyToUser(session.getClientId(), "No users, try to add some with /create_user");
+                return;
+            }
+            session.setCurrentAction("select_create_permission");
+            DbHelper.save(dataSource, session);
+            TdApi.KeyboardButton[][] rows = new TdApi.KeyboardButton[users.size()][1];
+            for (int i = 0; i < users.size(); i++) {
+                rows[i][0] = new TdApi.KeyboardButton(users.get(i).toString(), new TdApi.KeyboardButtonTypeText());
+            }
+            TdApi.ReplyMarkupShowKeyboard keyboard = new TdApi.ReplyMarkupShowKeyboard(rows, true, true, true);
+            TdApi.InputMessageContent text = new TdApi.InputMessageText(new TdApi.FormattedText("Select user to allow him destination", null), true, true);
+            bot.send(new TdApi.SendMessage(session.getClientId(), 0, false, false, keyboard, text), object -> {
+                logger.debug("sent " + object.toString());
+            });
+        } else {
+            replyToUser(session.getClientId(), "Not authorized to create permissions");
+        }
+    }
+
+    private static void handleListPermissionCommand(Session session) throws SQLException {
+        if (session.getAuthState() == State.AUTHORIZED && BOT_OWNER.equals(session.getPhone())) {
+            List<User> users = DbHelper.getUsers(dataSource);
+            if (users.isEmpty()) {
+                replyToUser(session.getClientId(), "No users, try to add some with /create_user");
+                return;
+            }
+            session.setCurrentAction("list_permission");
+            DbHelper.save(dataSource, session);
+            TdApi.KeyboardButton[][] rows = new TdApi.KeyboardButton[users.size()][1];
+            for (int i = 0; i < users.size(); i++) {
+                rows[i][0] = new TdApi.KeyboardButton(users.get(i).toString(), new TdApi.KeyboardButtonTypeText());
+            }
+            TdApi.ReplyMarkupShowKeyboard keyboard = new TdApi.ReplyMarkupShowKeyboard(rows, true, true, true);
+            TdApi.InputMessageContent text = new TdApi.InputMessageText(new TdApi.FormattedText("Select user to show allowed destination to him", null), true, true);
+            bot.send(new TdApi.SendMessage(session.getClientId(), 0, false, false, keyboard, text), object -> {
+                logger.debug("sent " + object.toString());
+            });
+        } else {
+            replyToUser(session.getClientId(), "Not authorized to list permissions");
+        }
+    }
+
+    private static void handleListPermission(Session session, String text) throws SQLException {
+        logger.debug("handle " + session.getCurrentAction());
+        if (session.getAuthState() == State.AUTHORIZED && BOT_OWNER.equals(session.getPhone())) {
+            session.setCurrentAction("");
+            DbHelper.save(dataSource, session);
+            try {
+                List<Chat> allowedChats = DbHelper.getAllowedDestinations(dataSource, text.split(" ")[0]);
+                if (allowedChats.isEmpty()) {
+                    replyToUser(session.getClientId(), "No allowed destination for " + text.split(" ")[0]);
+                }
+                final StringBuffer sb = new StringBuffer();
+                allowedChats.forEach(chat -> sb.append(chat.toString()).append("\n"));
+                replyToUser(session.getClientId(), sb.toString());
+            } catch (SQLException ex) {
+                replyToUser(session.getClientId(), "Ups, error");
+            }
+        } else {
+            replyToUser(session.getClientId(), "not authorized to show list permissions");
+        }
+    }
+
+    private static void handleSelectCreatePermission(Session session, String message) throws SQLException {
+        logger.debug("handle " + session.getCurrentAction());
+        if (session.getAuthState() == State.AUTHORIZED && BOT_OWNER.equals(session.getPhone())) {
+            List<Chat> destinations = DbHelper.getAllPossibleDestinations(dataSource);
+            if (destinations.isEmpty()) {
+                session.setCurrentAction("");
+                DbHelper.save(dataSource, session);
+                replyToUser(session.getClientId(), "No destinations, try to add some with /create_destination");
+                return;
+            }
+            session.setFirstParam(message.split(" ")[0]);
+            session.setCurrentAction("create_permission");
+            DbHelper.save(dataSource, session);
+            TdApi.KeyboardButton[][] rows = new TdApi.KeyboardButton[destinations.size()][1];
+            for (int i = 0; i < destinations.size(); i++) {
+                rows[i][0] = new TdApi.KeyboardButton(destinations.get(i).getName(), new TdApi.KeyboardButtonTypeText());
+            }
+            TdApi.ReplyMarkupShowKeyboard keyboard = new TdApi.ReplyMarkupShowKeyboard(rows, true, true, true);
+            TdApi.InputMessageContent text = new TdApi.InputMessageText(new TdApi.FormattedText("Select destination for " + message, null), true, true);
+            bot.send(new TdApi.SendMessage(session.getClientId(), 0, false, false, keyboard, text), object -> {
+                logger.debug("sent " + object.toString());
+            });
+        } else {
+            replyToUser(session.getClientId(), "not authorized to create permissions");
+        }
+    }
+
+    private static void handleCreatePermission(Session session, String message) throws SQLException {
+        logger.debug("handle " + session.getCurrentAction());
+        if (session.getAuthState() == State.AUTHORIZED && BOT_OWNER.equals(session.getPhone())) {
+            try {
+                boolean isOk = DbHelper.allowDestinationToUser(dataSource, message, session.getFirstParam());
+                session.setFirstParam("");
+                session.setCurrentAction("");
+                DbHelper.save(dataSource, session);
+                if (isOk) {
+                    replyToUser(session.getClientId(), "Permission granted.");
+                } else {
+                    replyToUser(session.getClientId(), "Destination not found.");
+                }
+            } catch (SQLException ex) {
+                logger.error(ex.getMessage(), ex);
+                replyToUser(session.getClientId(), "Ups, error. Maybe you trying to add same permission twice?");
+            }
+
+        } else {
+            replyToUser(session.getClientId(), "not authorized to create permissions");
+        }
+    }
+
+    private static void handleSelectDeletePermission(Session session, String message) throws SQLException {
+        logger.debug("handle " + session.getCurrentAction());
+        if (session.getAuthState() == State.AUTHORIZED && BOT_OWNER.equals(session.getPhone())) {
+            List<Chat> destinations = DbHelper.getAllowedDestinations(dataSource, message.split(" ")[0]);
+            if (destinations.isEmpty()) {
+                session.setCurrentAction("");
+                DbHelper.save(dataSource, session);
+                replyToUser(session.getClientId(), "No allowed destination for " + message + ", nothing to do");
+                return;
+            }
+            session.setFirstParam(message.split(" ")[0]);
+            session.setCurrentAction("delete_permission");
+            DbHelper.save(dataSource, session);
+            TdApi.KeyboardButton[][] rows = new TdApi.KeyboardButton[destinations.size()][1];
+            for (int i = 0; i < destinations.size(); i++) {
+                rows[i][0] = new TdApi.KeyboardButton(destinations.get(i).getName(), new TdApi.KeyboardButtonTypeText());
+            }
+            TdApi.ReplyMarkupShowKeyboard keyboard = new TdApi.ReplyMarkupShowKeyboard(rows, true, true, true);
+            TdApi.InputMessageContent text = new TdApi.InputMessageText(new TdApi.FormattedText("Select destination for " + message + " to removing", null), true, true);
+            bot.send(new TdApi.SendMessage(session.getClientId(), 0, false, false, keyboard, text), object -> {
+                logger.debug("sent " + object.toString());
+            });
+        } else {
+            replyToUser(session.getClientId(), "not authorized to delete permissions");
+        }
+    }
+
+    private static void handleDeletePermission(Session session, String message) throws SQLException {
+        logger.debug("handle " + session.getCurrentAction());
+        if (session.getAuthState() == State.AUTHORIZED && BOT_OWNER.equals(session.getPhone())) {
+            try {
+                boolean isOk = DbHelper.denyDestinationToUser(dataSource, message, session.getFirstParam());
+                session.setFirstParam("");
+                session.setCurrentAction("");
+                DbHelper.save(dataSource, session);
+                if (isOk) {
+                    replyToUser(session.getClientId(), "Permission revoked.");
+                } else {
+                    replyToUser(session.getClientId(), "Permission not found, nothing to do.");
+                }
+            } catch (SQLException ex) {
+                logger.error(ex.getMessage(), ex);
+                replyToUser(session.getClientId(), "Ups, error. Check log files for details.");
+            }
+
+        } else {
+            replyToUser(session.getClientId(), "not authorized to delete permissions");
+        }
     }
 
     private static void handleCreateUser(Session session, String text) throws SQLException {
@@ -735,7 +943,7 @@ public class Bot implements Runnable, AutoCloseable {
                         session.setFirstParam(String.valueOf(channel.chatId) + "_" + chat.title);
                         session.setCurrentAction("create_destination");
                         DbHelper.save(dataSource, session);
-                        List<Chat> destinations = DbHelper.getPossibleDestinations(dataSource);
+                        List<Chat> destinations = DbHelper.getAllowedDestinations(dataSource, session.getPhone());
                         TdApi.KeyboardButton[][] rows = new TdApi.KeyboardButton[destinations.size()][1];
                         for (int i = 0; i < destinations.size(); i++) {
                             rows[i][0] = new TdApi.KeyboardButton(destinations.get(i).getName(), new TdApi.KeyboardButtonTypeText());
@@ -811,7 +1019,7 @@ public class Bot implements Runnable, AutoCloseable {
     private static void handleListDestinationCommand(Session session) throws SQLException {
         if (session.getAuthState() == State.AUTHORIZED && BOT_OWNER.equals(session.getPhone())) {
 
-            List<Chat> destinations = DbHelper.getPossibleDestinations(dataSource);
+            List<Chat> destinations = DbHelper.getAllPossibleDestinations(dataSource);
             if (destinations.isEmpty()) {
                 replyToUser(session.getClientId(), "No destinations, use /create_destination");
             } else {
@@ -827,7 +1035,7 @@ public class Bot implements Runnable, AutoCloseable {
 
     private static void handleDeleteDestinationCommand(Session session) throws SQLException {
         if (session.getAuthState() == State.AUTHORIZED && BOT_OWNER.equals(session.getPhone())) {
-            List<Chat> destinations = DbHelper.getPossibleDestinations(dataSource);
+            List<Chat> destinations = DbHelper.getAllPossibleDestinations(dataSource);
 
             session.setCurrentAction("delete_destination_source");
             DbHelper.save(dataSource, session);
@@ -907,11 +1115,18 @@ public class Bot implements Runnable, AutoCloseable {
         if (session.getAuthState() == State.AUTHORIZED) {
 
             List<Chat> ownChats = DbHelper.getOwnChats(dataSource, session.getPhone());
+            List<Chat> allowedDestinations = DbHelper.getAllowedDestinations(dataSource, session.getPhone());
             if (ownChats.isEmpty()) {
                 replyToUser(session.getClientId(), "No chats, use /create");
             } else {
                 StringBuilder sb = new StringBuilder();
-                ownChats.forEach(chat -> sb.append(chat).append('\n'));
+                ownChats.forEach(chat -> {
+                    sb.append(chat);
+                    if (allowedDestinations.stream().noneMatch(dest -> dest.getChatIdTo() == chat.getChatIdTo())) {
+                        sb.append(" (denied)");
+                    }
+                    sb.append('\n');
+                });
                 replyToUser(session.getClientId(), sb.toString());
             }
         } else {

@@ -40,6 +40,16 @@ public class Chat {
 
     @Override
     public String toString() {
-        return "Chat{" + name + ", " + chatIdFrom + " -> " + chatIdTo + ", owner=" + owner + '}';
+        StringBuilder sb = new StringBuilder();
+        sb.append("Chat { ").append(name).append(", ");
+        if (chatIdFrom != 0) {
+            sb.append(chatIdFrom).append(" -> ");
+        }
+        sb.append(chatIdTo);
+        if (owner != null) {
+            sb.append(", owner=").append(owner);
+        }
+        sb.append(" }");
+        return sb.toString();
     }
 }

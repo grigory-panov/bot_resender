@@ -54,9 +54,10 @@ public class DbHelper {
     public static List<Chat> getChatsToForward(DataSource ds, String phone, long chatId) throws SQLException {
         final List<Chat> chats = new ArrayList<>();
         try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement ps = connection.prepareStatement("select * from user_chat where chat_id_from = ? and owner = ?")) {
+            try (PreparedStatement ps = connection.prepareStatement("select uc.* from user_chat uc inner join user_permission up on uc.chat_id_to = up.chat_id where uc.chat_id_from = ? and uc.owner = ? and up.phone = ?")) {
                 ps.setLong(1, chatId);
                 ps.setString(2, phone);
+                ps.setString(3, phone);
                 ResultSet resultSet = ps.executeQuery();
                 while (resultSet.next()){
                     Chat chat = new Chat();
@@ -205,7 +206,7 @@ public class DbHelper {
         }
     }
 
-    public static List<Chat> getPossibleDestinations(DataSource ds) throws SQLException {
+    public static List<Chat> getAllPossibleDestinations(DataSource ds) throws SQLException {
 
         final List<Chat> chats = new ArrayList<>();
         try (Connection connection = ds.getConnection()) {
@@ -408,6 +409,57 @@ public class DbHelper {
                 ps.setString(2, phone);
                 ps.executeUpdate();
                 connection.commit();
+            }
+        }
+    }
+
+    public static List<Chat> getAllowedDestinations(HikariDataSource ds, String phone) throws SQLException {
+        final List<Chat> chats = new ArrayList<>();
+        try (Connection connection = ds.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("select pd.* from possible_destination pd inner join user_permission up on pd.chat_id = up.chat_id and up.phone = ?")) {
+                ps.setString(1, phone);
+                ResultSet resultSet = ps.executeQuery();
+                while (resultSet.next()) {
+                    Chat chat = new Chat();
+                    chat.setChatIdTo(resultSet.getLong("chat_id"));
+                    chat.setName(resultSet.getString("chat_name"));
+                    chats.add(chat);
+                }
+                resultSet.close();
+                connection.commit();
+            }
+        }
+        return chats;
+    }
+
+    public static boolean allowDestinationToUser(HikariDataSource dataSource, String destinationName, String phone) throws SQLException {
+        Chat destination = getDestination(dataSource, destinationName);
+        if (destination == null) {
+            return false;
+        }
+        try (Connection connection = dataSource.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("insert into user_permission (phone, chat_id) values (?, ?)")) {
+                ps.setString(1, phone);
+                ps.setLong(2, destination.getChatIdTo());
+                ps.executeUpdate();
+                connection.commit();
+            }
+        }
+        return true;
+    }
+
+    public static boolean denyDestinationToUser(HikariDataSource dataSource, String destinationName, String phone) throws SQLException {
+        Chat destination = getDestination(dataSource, destinationName);
+        if (destination == null) {
+            return false;
+        }
+        try (Connection connection = dataSource.getConnection()) {
+            try (PreparedStatement ps = connection.prepareStatement("delete from user_permission where phone = ? and chat_id = ?")) {
+                ps.setString(1, phone);
+                ps.setLong(2, destination.getChatIdTo());
+                int rowsAffected = ps.executeUpdate();
+                connection.commit();
+                return rowsAffected == 1;
             }
         }
     }
