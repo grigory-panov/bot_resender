@@ -3,7 +3,7 @@ Telegram bot for resend messages from private channels to different channels.
 
 ## How to use
 
-- start converation with @resender1_bot
+- start conversation with @resender1_bot
 - **/login**
 - your phone number
 - auth code from telegram + any random digit at the end, for example, Telegram code 12345 you should send 123450
