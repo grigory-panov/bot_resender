@@ -34,6 +34,8 @@ public class Bot implements Runnable, AutoCloseable {
     private static final ConcurrentMap<String, Client> openSessions = new ConcurrentHashMap<>();
     private static final ConcurrentMap<String, ExpiryEntity> codeStorage = new ConcurrentHashMap<>();
     private static final ConcurrentMap<String, ExpiryEntity> passwordStorage = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Long, ExpiryEntity> channelNameStorage = new ConcurrentHashMap<>();
+
 
     private static Client worker;
     private static Client bot;
@@ -108,10 +110,11 @@ public class Bot implements Runnable, AutoCloseable {
 
         while (true) {
             try {
-                Thread.sleep(500);
+                Thread.sleep(10000);
                 final LocalDateTime now = LocalDateTime.now();
                 codeStorage.values().removeIf(ent -> ent.getExpireTime().isBefore(now));
                 passwordStorage.values().removeIf(ent -> ent.getExpireTime().isBefore(now));
+                channelNameStorage.values().removeIf(ent -> ent.getExpireTime().isBefore(now));
             } catch (InterruptedException ex) {
                 break;
             }
@@ -207,6 +210,9 @@ public class Bot implements Runnable, AutoCloseable {
                         if (object.getConstructor() == TdApi.Chat.CONSTRUCTOR) {
                             TdApi.Chat chatObject = (TdApi.Chat) object;
                             logger.debug("chat title is " + chatObject.title);
+                            if (chatObject.id != 0) {
+                                channelNameStorage.put(chatObject.id, new ExpiryEntity(chatObject.title, LocalDateTime.now().plusDays(1)));
+                            }
                             TdApi.InputMessageContent inputMessageContent = createNewMessage(message, chatObject.title, date);
                             worker.send(new TdApi.SendMessage(chat.getChatIdTo(), 0, false, true, null, inputMessageContent), object1 -> {
                                 logger.debug("message " + message.message.id + " from chat " + message.message.chatId + " was forwarded to chat " + chat.getChatIdTo());
@@ -215,11 +221,17 @@ public class Bot implements Runnable, AutoCloseable {
                                 } catch (SQLException ex) {
                                     logger.error(ex.getMessage(), ex);
                                 }
+                            }, error -> {
+                                logger.error(error.getMessage(), error);
                             });
                         } else if (object.getConstructor() == TdApi.User.CONSTRUCTOR) {
                             TdApi.User chatUser = (TdApi.User) object;
                             String userName = getFormattedName(chatUser);
                             logger.debug("chat user is " + userName);
+                            if (chatUser.id != 0) {
+                                channelNameStorage.put((long) chatUser.id, new ExpiryEntity(userName, LocalDateTime.now().plusDays(1)));
+                            }
+
                             TdApi.InputMessageContent inputMessageContent = createNewMessage(message, userName, date);
                             worker.send(new TdApi.SendMessage(chat.getChatIdTo(), 0, false, true, null, inputMessageContent), object1 -> {
                                 logger.debug("message " + message.message.id + " from chat " + message.message.chatId + " was forwarded to chat " + chat.getChatIdTo());
@@ -228,6 +240,8 @@ public class Bot implements Runnable, AutoCloseable {
                                 } catch (SQLException ex) {
                                     logger.error(ex.getMessage(), ex);
                                 }
+                            }, error -> {
+                                logger.error(error.getMessage(), error);
                             });
                         } else {
                             logger.debug(object.toString());
@@ -237,12 +251,28 @@ public class Bot implements Runnable, AutoCloseable {
                     if (message.message.forwardInfo != null) {
                         if (message.message.forwardInfo.origin.getConstructor() == TdApi.MessageForwardOriginChannel.CONSTRUCTOR) {
                             long chatId = ((TdApi.MessageForwardOriginChannel) message.message.forwardInfo.origin).chatId;
-                            logger.debug("trying to get channel header " + chatId);
-                            openSessions.get(phone).send(new TdApi.GetChat(chatId), handler);
+                            ExpiryEntity chatName = channelNameStorage.get(chatId);
+                            if (chatName != null) {
+                                logger.debug("get chat name " + chatName.getValue() + " from cache");
+                                TdApi.Chat knownChat = new TdApi.Chat();
+                                knownChat.title = chatName.getValue();
+                                handler.onResult(knownChat);
+                            } else {
+                                logger.debug("trying to get channel header " + chatId);
+                                openSessions.get(phone).send(new TdApi.GetChat(chatId), handler);
+                            }
                         } else if (message.message.forwardInfo.origin.getConstructor() == TdApi.MessageForwardOriginUser.CONSTRUCTOR) {
                             int senderUserId = ((TdApi.MessageForwardOriginUser) message.message.forwardInfo.origin).senderUserId;
-                            logger.debug("trying to get user chat header " + senderUserId);
-                            openSessions.get(phone).send(new TdApi.GetUser(senderUserId), handler);
+                            ExpiryEntity chatName = channelNameStorage.get((long) senderUserId);
+                            if (chatName != null) {
+                                logger.debug("get user name " + chatName.getValue() + " from cache");
+                                TdApi.User knownUser = new TdApi.User();
+                                knownUser.lastName = chatName.getValue();
+                                handler.onResult(knownUser);
+                            } else {
+                                logger.debug("trying to get user chat header " + senderUserId);
+                                openSessions.get(phone).send(new TdApi.GetUser(senderUserId), handler);
+                            }
                         } else {
                             TdApi.Chat hiddenUser = new TdApi.Chat();
                             hiddenUser.title = "Hidden user";
@@ -270,7 +300,7 @@ public class Bot implements Runnable, AutoCloseable {
         } else {
             username = '@' + username;
         }
-        return username;
+        return username.trim();
     }
 
     private static TdApi.TextEntity[] shiftEntity(TdApi.TextEntity[] entities, int length) {
