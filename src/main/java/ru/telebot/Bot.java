@@ -214,17 +214,23 @@ public class Bot implements Runnable, AutoCloseable {
                                 channelNameStorage.put(chatObject.id, new ExpiryEntity(chatObject.title, LocalDateTime.now().plusDays(1)));
                             }
                             TdApi.InputMessageContent inputMessageContent = createNewMessage(message, chatObject.title, date);
-                            worker.send(new TdApi.SendMessage(chat.getChatIdTo(), 0, false, true, null, inputMessageContent), object1 -> {
-                                logger.debug("message " + message.message.id + " from chat " + message.message.chatId + " was forwarded to chat " + chat.getChatIdTo());
-                                try {
-                                    DbHelper.addForwardedMessage(dataSource, message.message.id, chat.getChatIdTo());
-                                } catch (SQLException ex) {
-                                    logger.error(ex.getMessage(), ex);
+                            worker.send(new TdApi.SendMessage(chat.getChatIdTo(), 0, false, true, null, inputMessageContent), res -> {
+                                if (res.getConstructor() == TdApi.Error.CONSTRUCTOR) {
+                                    TdApi.Error error = (TdApi.Error) res;
+                                    logger.error(error.code + " : " + error.message);
+                                } else {
+                                    logger.debug("message " + message.message.id + " from chat " + message.message.chatId + " was forwarded to chat " + chat.getChatIdTo());
+                                    try {
+                                        DbHelper.addForwardedMessage(dataSource, message.message.id, chat.getChatIdTo());
+                                    } catch (SQLException ex) {
+                                        logger.error(ex.getMessage(), ex);
+                                    }
                                 }
                             }, error -> {
                                 logger.error(error.getMessage(), error);
                             });
                         } else if (object.getConstructor() == TdApi.User.CONSTRUCTOR) {
+
                             TdApi.User chatUser = (TdApi.User) object;
                             String userName = getFormattedName(chatUser);
                             logger.debug("chat user is " + userName);
@@ -233,12 +239,17 @@ public class Bot implements Runnable, AutoCloseable {
                             }
 
                             TdApi.InputMessageContent inputMessageContent = createNewMessage(message, userName, date);
-                            worker.send(new TdApi.SendMessage(chat.getChatIdTo(), 0, false, true, null, inputMessageContent), object1 -> {
-                                logger.debug("message " + message.message.id + " from chat " + message.message.chatId + " was forwarded to chat " + chat.getChatIdTo());
-                                try {
-                                    DbHelper.addForwardedMessage(dataSource, message.message.id, chat.getChatIdTo());
-                                } catch (SQLException ex) {
-                                    logger.error(ex.getMessage(), ex);
+                            worker.send(new TdApi.SendMessage(chat.getChatIdTo(), 0, false, true, null, inputMessageContent), res -> {
+                                if (res.getConstructor() == TdApi.Error.CONSTRUCTOR) {
+                                    TdApi.Error error = (TdApi.Error) res;
+                                    logger.error(error.code + " : " + error.message);
+                                } else {
+                                    logger.debug("message " + message.message.id + " from chat " + message.message.chatId + " was forwarded to chat " + chat.getChatIdTo());
+                                    try {
+                                        DbHelper.addForwardedMessage(dataSource, message.message.id, chat.getChatIdTo());
+                                    } catch (SQLException ex) {
+                                        logger.error(ex.getMessage(), ex);
+                                    }
                                 }
                             }, error -> {
                                 logger.error(error.getMessage(), error);
