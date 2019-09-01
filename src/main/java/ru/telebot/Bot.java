@@ -2,20 +2,25 @@ package ru.telebot;
 
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.pool.HikariPool;
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.drinkless.tdlib.Client;
 import org.drinkless.tdlib.TdApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.telebot.dao.DbHelper;
 import ru.telebot.domain.*;
+import ru.telebot.domain.Session;
 import ru.telebot.handlers.AuthorizationRequestHandler;
 import ru.telebot.handlers.BotUpdatesHandler;
+import ru.telebot.handlers.QueueHandler;
 import ru.telebot.handlers.UpdatesHandler;
 
+import javax.jms.*;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Bot implements Runnable, AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(Bot.class);
@@ -29,6 +34,11 @@ public class Bot implements Runnable, AutoCloseable {
     private static String PROXY_PASS;
 
     private static String BOT_OWNER;
+    private static String[] WORKERS;
+
+    public static int SENDING_DELAY;
+
+    private static AtomicInteger currentWorkerIndex = new AtomicInteger(0);
 
     private static HikariDataSource dataSource = null;
     private static final ConcurrentMap<String, Client> openSessions = new ConcurrentHashMap<>();
@@ -37,8 +47,10 @@ public class Bot implements Runnable, AutoCloseable {
     private static final ConcurrentMap<Long, ExpiryEntity> channelNameStorage = new ConcurrentHashMap<>();
 
 
-    private static Client worker;
-    private static Client bot;
+    private static Client worker = null;
+    private static Client bot = null;
+    private static javax.jms.Session jmsSession;
+    private static MessageProducer producer;
 
     private static final ExecutorService executor = new ThreadPoolExecutor(1, 30,
             0L, TimeUnit.MILLISECONDS,
@@ -67,6 +79,8 @@ public class Bot implements Runnable, AutoCloseable {
             PROXY_PORT = Config.getIntValue("proxy.port");
             PROXY_USER = Config.getValue("proxy.user");
             PROXY_PASS = Config.getValue("proxy.password");
+            SENDING_DELAY = Config.getIntValueOrDefault("sending.delay", 1000);
+            WORKERS = Config.getValue("bot.workers").split(";");
             logger.debug("testing connection...");
             DbHelper.testConnection(dataSource);
             logger.debug("connection is OK");
@@ -85,12 +99,24 @@ public class Bot implements Runnable, AutoCloseable {
             logger.debug("links count: " + links.size());
             links.forEach(link -> logger.debug(link.toString()));
 
+            ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("tcp://127.0.0.1:61616");
+            Connection jmsConnection = connectionFactory.createConnection();
+            jmsConnection.start();
+            jmsSession = jmsConnection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+            Queue queue = jmsSession.createQueue("oneWindow");
+            producer = jmsSession.createProducer(queue);
+            MessageConsumer consumer = jmsSession.createConsumer(queue);
+            consumer.setMessageListener(new QueueHandler());
 
-        } catch (HikariPool.PoolInitializationException | SQLException ex) {
+        } catch (HikariPool.PoolInitializationException | SQLException | JMSException ex) {
             logger.error(ex.getMessage(), ex);
             logger.debug("init failed");
             throw new BotException(ex);
         }
+    }
+
+    public static boolean isReady() {
+        return worker != null;
     }
 
     @Override
@@ -99,6 +125,7 @@ public class Bot implements Runnable, AutoCloseable {
             logger.error("cannot run more than one bot");
             return;
         }
+
         createBot();
         try {
             List<Session> sessions = DbHelper.getSessions(dataSource);
@@ -195,7 +222,7 @@ public class Bot implements Runnable, AutoCloseable {
 
     public static void onNewMessage(TdApi.UpdateNewMessage message, String phone) {
         logger.debug("new message arrived for " + phone);
-        if (worker == null) {
+        if (!isReady()) {
             logger.error("worker not started, message ignored");
             return;
         }
@@ -213,22 +240,8 @@ public class Bot implements Runnable, AutoCloseable {
                             if (chatObject.id != 0) {
                                 channelNameStorage.put(chatObject.id, new ExpiryEntity(chatObject.title, LocalDateTime.now().plusDays(1)));
                             }
-                            TdApi.InputMessageContent inputMessageContent = createNewMessage(message, chatObject.title, date);
-                            worker.send(new TdApi.SendMessage(chat.getChatIdTo(), 0, false, true, null, inputMessageContent), res -> {
-                                if (res.getConstructor() == TdApi.Error.CONSTRUCTOR) {
-                                    TdApi.Error error = (TdApi.Error) res;
-                                    logger.error(error.code + " : " + error.message);
-                                } else {
-                                    logger.debug("message " + message.message.id + " from chat " + message.message.chatId + " was forwarded to chat " + chat.getChatIdTo());
-                                    try {
-                                        DbHelper.addForwardedMessage(dataSource, message.message.id, chat.getChatIdTo());
-                                    } catch (SQLException ex) {
-                                        logger.error(ex.getMessage(), ex);
-                                    }
-                                }
-                            }, error -> {
-                                logger.error(error.getMessage(), error);
-                            });
+                            addMessageToQueue(chat.getChatIdTo(), message, chatObject.title, date);
+
                         } else if (object.getConstructor() == TdApi.User.CONSTRUCTOR) {
 
                             TdApi.User chatUser = (TdApi.User) object;
@@ -238,22 +251,8 @@ public class Bot implements Runnable, AutoCloseable {
                                 channelNameStorage.put((long) chatUser.id, new ExpiryEntity(userName, LocalDateTime.now().plusDays(1)));
                             }
 
-                            TdApi.InputMessageContent inputMessageContent = createNewMessage(message, userName, date);
-                            worker.send(new TdApi.SendMessage(chat.getChatIdTo(), 0, false, true, null, inputMessageContent), res -> {
-                                if (res.getConstructor() == TdApi.Error.CONSTRUCTOR) {
-                                    TdApi.Error error = (TdApi.Error) res;
-                                    logger.error(error.code + " : " + error.message);
-                                } else {
-                                    logger.debug("message " + message.message.id + " from chat " + message.message.chatId + " was forwarded to chat " + chat.getChatIdTo());
-                                    try {
-                                        DbHelper.addForwardedMessage(dataSource, message.message.id, chat.getChatIdTo());
-                                    } catch (SQLException ex) {
-                                        logger.error(ex.getMessage(), ex);
-                                    }
-                                }
-                            }, error -> {
-                                logger.error(error.getMessage(), error);
-                            });
+                            addMessageToQueue(chat.getChatIdTo(), message, userName, date);
+
                         } else {
                             logger.debug(object.toString());
                         }
@@ -301,6 +300,63 @@ public class Bot implements Runnable, AutoCloseable {
         } catch (SQLException ex) {
             logger.error(ex.getMessage(), ex);
         }
+    }
+
+    private static void addMessageToQueue(long chatIdTo, TdApi.UpdateNewMessage message, String title, int date) {
+        try {
+            ObjectMessage objectMessage = jmsSession.createObjectMessage(message);
+            objectMessage.setLongProperty(QueueHandler.CHAT_ID_PROPERTY, chatIdTo);
+            objectMessage.setStringProperty(QueueHandler.TITLE_PROPERTY, title);
+            objectMessage.setIntProperty(QueueHandler.DATE_PROPERTY, date);
+            producer.send(objectMessage);
+            logger.debug("put message " + message.message.id + " to queue");
+        } catch (JMSException e) {
+            logger.error(e.getMessage(), e);
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    public static void forwardMessage(long chatIdTo, TdApi.UpdateNewMessage message, String title, int date) throws SQLException {
+        // here is potentially message can be forwarded twice.
+        if (!DbHelper.messageWasForwarderToChannel(dataSource, message.message.id, chatIdTo)) {
+            TdApi.InputMessageContent inputMessageContent = createNewMessage(message, title, date);
+            Client robin = getNextClientForResend();
+            if (robin == null) {
+                robin = worker;
+                logger.error("no client configured for round-robin, will use admin account");
+            }
+            robin.send(new TdApi.SendMessage(chatIdTo, 0, false, true, null, inputMessageContent), res -> {
+                if (res.getConstructor() == TdApi.Error.CONSTRUCTOR) {
+                    TdApi.Error error = (TdApi.Error) res;
+                    logger.error(error.code + " : " + error.message);
+                } else {
+                    logger.debug("message " + message.message.id + " from chat " + message.message.chatId + " was forwarded to chat " + chatIdTo);
+                    try {
+                        DbHelper.addForwardedMessage(dataSource, message.message.id, chatIdTo);
+                    } catch (SQLException ex) {
+                        logger.error(ex.getMessage(), ex);
+                    }
+                }
+            }, error -> {
+                logger.error(error.getMessage(), error);
+            });
+        }
+    }
+
+    private static Client getNextClientForResend() {
+        int count = 0;
+        Client client = null;
+        while (count++ < WORKERS.length) {
+            String robin = WORKERS[currentWorkerIndex.getAndAdd(1)];
+            if (currentWorkerIndex.get() >= WORKERS.length) {
+                currentWorkerIndex.set(0);
+            }
+            client = openSessions.get(robin);
+            if (client != null) {
+                return client;
+            }
+        }
+        return null;
     }
 
     private static String getFormattedName(TdApi.User user) {
@@ -1208,5 +1264,7 @@ public class Bot implements Runnable, AutoCloseable {
     public void close() throws Exception {
         openSessions.values().forEach(Client::close);
     }
+
+
 }
 

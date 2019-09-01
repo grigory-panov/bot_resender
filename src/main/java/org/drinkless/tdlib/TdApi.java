@@ -1,7 +1,9 @@
 package org.drinkless.tdlib;
 
+import java.io.Serializable;
+
 public class TdApi {
-    public abstract static class Object {
+    public abstract static class Object implements Serializable {
         public native String toString();
 
         public abstract int getConstructor();

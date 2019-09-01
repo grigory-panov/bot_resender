@@ -42,4 +42,15 @@ public class Config {
         }
         return Integer.parseInt(props.getProperty(name));
     }
+
+    public static int getIntValueOrDefault(String name, int defaultValue) throws BotException {
+        if (props == null) {
+            throw new BotException("Config is not inited!");
+        }
+        String value = props.getProperty(name);
+        if (value == null) {
+            return defaultValue;
+        }
+        return Integer.parseInt(value);
+    }
 }
