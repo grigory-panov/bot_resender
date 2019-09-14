@@ -490,7 +490,14 @@ public class Bot implements Runnable, AutoCloseable {
                     client.close();
                 }
                 try {
-                    DbHelper.deleteSession(dataSource, phone);
+                    Session session = DbHelper.getSessionByPhone(dataSource, phone);
+                    if (session != null) {
+                        session.setPhone(phone);
+                        session.setAuthState(State.LOGIN);
+                        session.setFirstParam("");
+                        session.setCurrentAction("");
+                        DbHelper.save(dataSource, session);
+                    }
                 } catch (SQLException ex) {
                     logger.error(ex.getMessage(), ex);
                 }
@@ -1248,6 +1255,7 @@ public class Bot implements Runnable, AutoCloseable {
 
         });
     }
+
 
     private static String getBotCommand(String text, TdApi.TextEntity[] entities) {
         if (entities != null) {

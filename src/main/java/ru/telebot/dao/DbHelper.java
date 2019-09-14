@@ -123,16 +123,6 @@ public class DbHelper {
 
 
 
-    public static void deleteSession(DataSource ds, String phone) throws SQLException {
-        try (Connection connection = ds.getConnection()) {
-            try (PreparedStatement ps = connection.prepareStatement("delete from user_session where phone = ?")) {
-                ps.setString(1, phone);
-                ps.executeUpdate();
-                connection.commit();
-            }
-        }
-    }
-
     public static Session getSessionByClientId(DataSource ds, long clientId) throws SQLException  {
         try (Connection connection = ds.getConnection()) {
             try (PreparedStatement ps = connection.prepareStatement("select * from user_session where client_id = ?")) {
