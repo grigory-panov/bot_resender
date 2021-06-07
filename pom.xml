@@ -11,7 +11,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java-version>1.8</java-version>
         <org.slf4j-version>1.7.5</org.slf4j-version>
-        <ch.qos.logback-version>1.0.13</ch.qos.logback-version>
+        <ch.qos.logback-version>1.2.0</ch.qos.logback-version>
     </properties>
 
     <build>
